@@ -1,0 +1,11 @@
+{"timestamp":"00:00:01.643","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:08:43.956","source":"Server","level":"ERROR","message":"⨯ Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\app\\page\\build-manifest.json'"}
+{"timestamp":"00:08:44.006","source":"Server","level":"ERROR","message":"⨯ Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\pages\\_app\\build-manifest.json'"}
+{"timestamp":"00:08:44.052","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\app\\page\\build-manifest.json'"}
+{"timestamp":"00:08:44.081","source":"Server","level":"ERROR","message":"⨯ Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\pages\\_app\\build-manifest.json'"}
+{"timestamp":"00:08:44.107","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\pages\\_app\\build-manifest.json'"}
+{"timestamp":"00:10:26.487","source":"Server","level":"ERROR","message":"⨯ Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\app\\page\\build-manifest.json'"}
+{"timestamp":"00:10:26.525","source":"Server","level":"ERROR","message":"⨯ Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\pages\\_app\\build-manifest.json'"}
+{"timestamp":"00:10:26.591","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\app\\page\\build-manifest.json'"}
+{"timestamp":"00:10:26.622","source":"Server","level":"ERROR","message":"⨯ Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\pages\\_app\\build-manifest.json'"}
+{"timestamp":"00:10:26.656","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, open 'C:\\Users\\cheha\\my-app\\dist\\dev\\server\\pages\\_app\\build-manifest.json'"}
