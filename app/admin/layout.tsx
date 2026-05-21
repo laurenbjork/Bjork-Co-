@@ -20,7 +20,9 @@ import {
   Megaphone,
   Instagram,
   Ruler,
-  BarChart3
+  BarChart3,
+  Info,
+  Home
 } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -36,6 +38,9 @@ const navItems = [
   { href: '/admin/social/instagram', label: 'Instagram Feed', icon: Instagram },
   { href: '/admin/size-guides', label: 'Size Guides', icon: Ruler },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin/pages/homepage', label: 'Homepage', icon: Home },
+  { href: '/admin/pages/about', label: 'About Page', icon: Info },
+  { href: '/admin/pages/contact', label: 'Contact Page', icon: Mail },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
