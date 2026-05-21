@@ -3,6 +3,7 @@ import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/app/components/AuthProvider";
 import NewsletterPopup from "@/app/components/NewsletterPopup";
+import GoogleAnalytics from "@/app/components/GoogleAnalytics";
 
 const playfair = Playfair_Display({
   variable: "--font-serif",
@@ -41,6 +42,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <NewsletterPopup />
+          <GoogleAnalytics />
         </AuthProvider>
       </body>
     </html>
