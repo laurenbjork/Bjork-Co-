@@ -8,18 +8,21 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Newsletter */}
           <div className="lg:col-span-2">
-            <h3 className="text-[12px] font-medium tracking-[0.1em] uppercase mb-4">
-              Your email
+            <h3 className="text-[12px] font-medium tracking-[0.1em] uppercase mb-2">
+              Join Our Newsletter
             </h3>
-            <form className="flex gap-2 mb-6">
+            <p className="text-[12px] text-white/60 mb-4">
+              Subscribe for updates and exclusive offers
+            </p>
+            <form className="flex gap-2 mb-6 max-w-[320px]">
               <input
                 type="email"
-                placeholder="Your email"
-                className="flex-1 bg-transparent border-b border-white/30 text-white text-[13px] py-2 placeholder:text-white/50 focus:outline-none focus:border-white/60"
+                placeholder="your@email.com"
+                className="flex-1 bg-transparent border-b border-white/30 text-white text-[13px] py-2 placeholder:text-white/50 focus:outline-none focus:border-white/60 min-w-0"
               />
               <button
                 type="submit"
-                className="text-[12px] font-medium tracking-[0.1em] uppercase hover:opacity-80 transition-opacity"
+                className="text-[12px] font-medium tracking-[0.1em] uppercase hover:opacity-80 transition-opacity whitespace-nowrap"
               >
                 Subscribe
               </button>

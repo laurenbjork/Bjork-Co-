@@ -41,6 +41,21 @@ export async function getProductBySlug(slug: string) {
   return data;
 }
 
+export async function getProductById(id: string) {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching product by ID:', error);
+    return null;
+  }
+
+  return data;
+}
+
 export async function getProductsByCategory(categorySlug: string) {
   const { data, error } = await supabase
     .from('products')

@@ -168,6 +168,121 @@ export async function markSubmissionAsRead(id: string) {
 }
 
 // ==========================================
+// PRODUCT RELATIONSHIPS (Categories & Collections)
+// ==========================================
+
+export async function assignCategoriesToProduct(productId: string, categoryIds: string[]) {
+  // First, remove existing assignments
+  await supabase
+    .from('product_categories')
+    .delete()
+    .eq('product_id', productId);
+
+  // Then, add new assignments
+  if (categoryIds.length > 0) {
+    const assignments = categoryIds.map((categoryId) => ({
+      product_id: productId,
+      category_id: categoryId,
+    }));
+
+    const { error } = await supabase
+      .from('product_categories')
+      .insert(assignments);
+
+    if (error) throw error;
+  }
+}
+
+export async function assignCollectionsToProduct(productId: string, collectionIds: string[]) {
+  // First, remove existing assignments
+  await supabase
+    .from('product_collections')
+    .delete()
+    .eq('product_id', productId);
+
+  // Then, add new assignments
+  if (collectionIds.length > 0) {
+    const assignments = collectionIds.map((collectionId) => ({
+      product_id: productId,
+      collection_id: collectionId,
+    }));
+
+    const { error } = await supabase
+      .from('product_collections')
+      .insert(assignments);
+
+    if (error) throw error;
+  }
+}
+
+// ==========================================
+// PRODUCT IMAGES
+// ==========================================
+
+export async function addProductImage(productId: string, imageUrl: string, isHero: boolean = false) {
+  const { data, error } = await supabase
+    .from('product_images')
+    .insert([{
+      product_id: productId,
+      image_url: imageUrl,
+      is_hero: isHero,
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateProductImagesOrder(images: { id: string; sort_order: number }[]) {
+  // Update each image's sort order
+  for (const image of images) {
+    const { error } = await supabase
+      .from('product_images')
+      .update({ sort_order: image.sort_order })
+      .eq('id', image.id);
+
+    if (error) throw error;
+  }
+}
+
+export async function setHeroImage(productId: string, imageId: string) {
+  // First, unset all hero images for this product
+  await supabase
+    .from('product_images')
+    .update({ is_hero: false })
+    .eq('product_id', productId);
+
+  // Then, set the new hero
+  const { error } = await supabase
+    .from('product_images')
+    .update({ is_hero: true })
+    .eq('id', imageId);
+
+  if (error) throw error;
+}
+
+export async function deleteProductImage(imageId: string) {
+  const { error } = await supabase
+    .from('product_images')
+    .delete()
+    .eq('id', imageId);
+
+  if (error) throw error;
+}
+
+export async function getProductImages(productId: string) {
+  const { data, error } = await supabase
+    .from('product_images')
+    .select('*')
+    .eq('product_id', productId)
+    .order('sort_order', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+// ==========================================
 // STORAGE UPLOAD
 // ==========================================
 
