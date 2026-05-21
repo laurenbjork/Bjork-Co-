@@ -14,7 +14,9 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  Mail,
+  Inbox
 } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -24,6 +26,8 @@ const navItems = [
   { href: '/admin/collections', label: 'Collections', icon: FolderOpen },
   { href: '/admin/categories', label: 'Categories', icon: ShoppingBag },
   { href: '/admin/blog', label: 'Blog Posts', icon: FileText },
+  { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
+  { href: '/admin/inquiries', label: 'Inquiries', icon: Inbox },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
