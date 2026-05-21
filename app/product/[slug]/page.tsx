@@ -7,11 +7,13 @@ import Breadcrumb from '@/app/components/Breadcrumb';
 import ProductGallery from '@/app/components/ProductGallery';
 import ProductInfo from '@/app/components/ProductInfo';
 import RelatedProducts from '@/app/components/RelatedProducts';
-import { products, getProductBySlug, getRelatedProducts } from '@/app/data/products';
+import { getProductBySlug, getAllProducts, getFeaturedProducts } from '@/app/lib/supabase-queries';
+import { convertSupabaseProduct } from '@/app/types/supabase';
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const products = await getAllProducts();
   return products.map((product) => ({
-    slug: product.href.replace('/product/', ''),
+    slug: product.slug,
   }));
 }
 
@@ -21,29 +23,37 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const supabaseProduct = await getProductBySlug(slug);
 
-  if (!product) {
+  if (!supabaseProduct) {
     return {
       title: 'Product | BJÖRK & CO.',
     };
   }
 
+  const product = convertSupabaseProduct(supabaseProduct);
+
   return {
     title: `${product.name} | BJÖRK & CO.`,
-    description: product.description || `Shop ${product.name} at BJÖRK & CO.`,
+    description: product.shortDescription || `Shop ${product.name} at BJÖRK & CO.`,
   };
 }
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const supabaseProduct = await getProductBySlug(slug);
 
-  if (!product) {
+  if (!supabaseProduct) {
     notFound();
   }
 
-  const relatedProducts = getRelatedProducts(product.id, product.category || '', 4);
+  const product = convertSupabaseProduct(supabaseProduct);
+
+  // Get featured products as related (since we don't have related products table yet)
+  const relatedSupabaseProducts = await getFeaturedProducts(4);
+  const relatedProducts = relatedSupabaseProducts
+    .filter((p) => p.id !== product.id)
+    .map(convertSupabaseProduct);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -54,10 +64,6 @@ export default async function ProductPage({ params }: Props) {
           <Breadcrumb
             items={[
               { label: 'Shop', href: '/shop' },
-              {
-                label: product.category || 'Products',
-                href: `/collections/${product.category?.toLowerCase().replace(/\s+/g, '-')}`,
-              },
               { label: product.name },
             ]}
           />

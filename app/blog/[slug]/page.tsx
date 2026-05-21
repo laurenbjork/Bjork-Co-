@@ -7,7 +7,7 @@ import Footer from '@/app/sections/Footer';
 import AnnouncementBar from '@/app/sections/AnnouncementBar';
 import Breadcrumb from '@/app/components/Breadcrumb';
 import BlogCard from '@/app/components/BlogCard';
-import { blogPosts, getBlogPostBySlug, getRelatedPosts } from '@/app/data/blog';
+import { getBlogPostBySlug, getAllBlogPosts } from '@/app/lib/supabase-queries';
 import { ArrowLeft, ArrowRight, Clock, Calendar } from 'lucide-react';
 
 interface BlogPostPageProps {
@@ -15,14 +15,15 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  return blogPosts.map((post) => ({
+  const posts = await getAllBlogPosts();
+  return posts.map((post) => ({
     slug: post.slug,
   }));
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
     return {
@@ -32,26 +33,32 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   return {
     title: `${post.title} | BJÖRK & CO. Journal`,
-    description: post.excerpt,
+    description: post.excerpt || '',
   };
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
 
-  const relatedPosts = getRelatedPosts(slug, 3);
+  // Get related posts (exclude current, get 3 most recent)
+  const allPosts = await getAllBlogPosts();
+  const relatedPosts = allPosts
+    .filter((p) => p.slug !== slug)
+    .slice(0, 3);
 
   // Format date
-  const formattedDate = new Date(post.publishDate).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = post.published_at
+    ? new Date(post.published_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : 'Draft';
 
   return (
     <main className="min-h-screen">
@@ -62,7 +69,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         {/* Hero Image */}
         <div className="relative h-[50vh] min-h-[400px] bg-gray-100">
           <Image
-            src={post.featuredImage}
+            src={post.featured_image || '/images/blog-placeholder.jpg'}
             alt={post.title}
             fill
             className="object-cover"
@@ -87,7 +94,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="bg-white p-8 md:p-12 shadow-sm mb-12">
             <div className="flex flex-wrap items-center gap-4 text-[13px] text-gray-500 mb-6">
               <span className="uppercase tracking-[0.1em] text-[#013220] font-medium">
-                {post.category}
+                {post.category || 'General'}
               </span>
               <span className="text-gray-300">|</span>
               <span className="flex items-center gap-1">
@@ -97,7 +104,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               <span className="text-gray-300">|</span>
               <span className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                {post.readTime}
+                {post.read_time || '5 min read'}
               </span>
             </div>
 
@@ -108,11 +115,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <div className="flex items-center gap-4 pt-6 border-t border-gray-100">
               <div className="w-12 h-12 bg-[#013220]/10 rounded-full flex items-center justify-center">
                 <span className="text-[16px] font-medium text-[#013220]">
-                  {post.author.charAt(0)}
+                  {(post.author || 'B').charAt(0)}
                 </span>
               </div>
               <div>
-                <p className="font-medium text-[15px] text-black">{post.author}</p>
+                <p className="font-medium text-[15px] text-black">{post.author || 'BJÖRK & CO.'}</p>
                 <p className="text-[13px] text-gray-500">BJÖRK & CO.</p>
               </div>
             </div>

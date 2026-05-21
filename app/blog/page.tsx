@@ -5,7 +5,7 @@ import Footer from '@/app/sections/Footer';
 import AnnouncementBar from '@/app/sections/AnnouncementBar';
 import Breadcrumb from '@/app/components/Breadcrumb';
 import BlogCard from '@/app/components/BlogCard';
-import { blogPosts } from '@/app/data/blog';
+import { getAllBlogPosts } from '@/app/lib/supabase-queries';
 
 const amiri = Amiri({
   weight: ['400', '700'],
@@ -18,9 +18,11 @@ export const metadata: Metadata = {
   description: 'Explore our journal for insights on jewelry design, bridal trends, custom craftsmanship, and diamond education from BJÖRK & CO.',
 };
 
-export default function BlogIndexPage() {
+export default async function BlogIndexPage() {
+  const blogPosts = await getAllBlogPosts();
+  
   // Get unique categories
-  const categories = ['All', ...new Set(blogPosts.map((post) => post.category))];
+  const categories = ['All', ...new Set(blogPosts.map((post) => post.category).filter(Boolean))];
 
   return (
     <main className="min-h-screen">
@@ -44,30 +46,41 @@ export default function BlogIndexPage() {
         </div>
 
         {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
-          {categories.map((category) => (
-            <button
-              key={category}
-              className="px-4 py-2 text-[13px] tracking-[0.05em] uppercase border border-gray-300 text-gray-600 hover:border-[#013220] hover:text-[#013220] transition-colors"
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
-        {/* Featured Post */}
-        {blogPosts[0] && (
-          <div className="mb-16">
-            <BlogCard post={blogPosts[0]} />
+        {categories.length > 1 && (
+          <div className="flex flex-wrap justify-center gap-2 mb-12">
+            {categories.map((category) => (
+              <button
+                key={category}
+                className="px-4 py-2 text-[13px] tracking-[0.05em] uppercase border border-gray-300 text-gray-600 hover:border-[#013220] hover:text-[#013220] transition-colors"
+              >
+                {category}
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Blog Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pb-24">
-          {blogPosts.slice(1).map((post) => (
-            <BlogCard key={post.slug} post={post} />
-          ))}
-        </div>
+        {/* Blog Content */}
+        {blogPosts.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-gray-500 text-[16px]">No blog posts yet.</p>
+          </div>
+        ) : (
+          <>
+            {/* Featured Post */}
+            {blogPosts[0] && (
+              <div className="mb-16">
+                <BlogCard post={blogPosts[0]} featured />
+              </div>
+            )}
+
+            {/* Blog Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pb-24">
+              {blogPosts.slice(1).map((post) => (
+                <BlogCard key={post.slug} post={post} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <Footer />
