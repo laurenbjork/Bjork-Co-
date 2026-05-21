@@ -19,7 +19,8 @@ import {
   Inbox,
   Megaphone,
   Instagram,
-  Ruler
+  Ruler,
+  BarChart3
 } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -34,6 +35,7 @@ const navItems = [
   { href: '/admin/inquiries', label: 'Inquiries', icon: Inbox },
   { href: '/admin/social/instagram', label: 'Instagram Feed', icon: Instagram },
   { href: '/admin/size-guides', label: 'Size Guides', icon: Ruler },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
