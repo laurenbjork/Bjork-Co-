@@ -35,7 +35,7 @@ export default function ContactPage() {
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid lg:grid-cols-2 gap-16 pb-24">
+        <div className="grid lg:grid-cols-2 gap-24 pb-24">
           {/* Left Column - Form */}
           <div>
             <h2 className="font-serif text-[28px] text-black mb-6">Send Us a Message</h2>
@@ -43,7 +43,7 @@ export default function ContactPage() {
           </div>
 
           {/* Right Column - Contact Info */}
-          <div className="space-y-10">
+          <div className="space-y-10 pt-[72px]">
             {/* Address */}
             <div className="flex gap-4">
               <div className="w-12 h-12 bg-[#013220]/10 rounded-full flex items-center justify-center flex-shrink-0">

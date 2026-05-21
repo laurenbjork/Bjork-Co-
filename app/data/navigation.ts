@@ -41,23 +41,23 @@ export const footerSections: FooterSection[] = [
     title: 'CLIENT CONCIERGE',
     links: [
       { label: 'Contact Us', href: '/contact' },
-      { label: 'FAQs', href: '/faqs' },
-      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'FAQs', href: '/faq' },
+      { label: 'Privacy Policy', href: '/privacy-policy' },
     ],
   },
   {
     title: 'INFO',
     links: [
       { label: 'About Us', href: '/about' },
-      { label: 'Ring Size Guide', href: '/size-guide' },
-      { label: 'Diamond Education', href: '/education' },
+      { label: 'Ring Size Guide', href: '/ring-size-guide' },
+      { label: 'Diamond Education', href: '/diamond-education' },
     ],
   },
   {
     title: 'APPOINTMENTS & EVENTS',
     links: [
-      { label: 'Showroom Appointments', href: '/appointments' },
-      { label: 'Heirloom Revamps', href: '/heirloom-revamps' },
+      { label: 'Showroom Appointments', href: '/contact' },
+      { label: 'Heirloom Revamps', href: '/collections/custom-designs' },
     ],
   },
 ];
