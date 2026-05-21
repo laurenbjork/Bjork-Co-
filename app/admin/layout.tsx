@@ -18,7 +18,8 @@ import {
   Mail,
   Inbox,
   Megaphone,
-  Instagram
+  Instagram,
+  Ruler
 } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -32,6 +33,7 @@ const navItems = [
   { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
   { href: '/admin/inquiries', label: 'Inquiries', icon: Inbox },
   { href: '/admin/social/instagram', label: 'Instagram Feed', icon: Instagram },
+  { href: '/admin/size-guides', label: 'Size Guides', icon: Ruler },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
