@@ -6,14 +6,19 @@ import Breadcrumb from '@/app/components/Breadcrumb';
 import CollectionHeader from '@/app/components/CollectionHeader';
 import FilterBar from '@/app/components/FilterBar';
 import ProductGrid from '@/app/components/ProductGrid';
-import { products } from '@/app/data/products';
+import { getAllProducts } from '@/app/lib/supabase-queries';
 
 export const metadata: Metadata = {
   title: 'Shop All | BJÖRK & CO.',
   description: 'Explore our complete collection of fine jewelry, engagement rings, necklaces, bracelets, and custom designs.',
 };
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const products = await getAllProducts();
+  
+  // Debug logging
+  console.log('Shop page products:', products.length, products);
+
   return (
     <div className="flex flex-col min-h-screen">
       <AnnouncementBar />

@@ -1,23 +1,20 @@
 import ProductCard from './ProductCard';
-import { Product } from '@/app/types';
+import EmptyState from './EmptyState';
+import { SupabaseProduct, convertSupabaseProduct } from '@/app/types/supabase';
 
 interface ProductGridProps {
-  products: Product[];
+  products: SupabaseProduct[];
 }
 
 export default function ProductGrid({ products }: ProductGridProps) {
   if (products.length === 0) {
-    return (
-      <div className="py-20 text-center">
-        <p className="text-[14px] text-gray-500">No products found in this collection.</p>
-      </div>
-    );
+    return <EmptyState title="No products in this collection" />;
   }
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 py-8">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={convertSupabaseProduct(product)} />
       ))}
     </div>
   );

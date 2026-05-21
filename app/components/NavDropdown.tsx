@@ -30,29 +30,44 @@ export default function NavDropdown({ item }: NavDropdownProps) {
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <button
-        className={cn(
-          'flex items-center gap-1 text-[13px] font-medium tracking-[0.05em] transition-colors',
-          isOpen ? 'text-[#013220]' : 'text-black hover:text-[#013220]'
-        )}
-      >
-        {item.label}
-        <ChevronDown
+      <div className="flex items-center">
+        {/* Main label is now clickable */}
+        <Link
+          href={item.href}
           className={cn(
-            'w-3 h-3 transition-transform duration-200',
-            isOpen && 'rotate-180'
+            'py-4 text-[13px] font-medium tracking-[0.05em] transition-colors',
+            isOpen ? 'text-[#013220]' : 'text-black hover:text-[#013220]'
           )}
-        />
-      </button>
+        >
+          {item.label}
+        </Link>
+        {/* Chevron toggles dropdown */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            'flex items-center py-4 pl-1 pr-2 transition-colors cursor-pointer',
+            isOpen ? 'text-[#013220]' : 'text-black hover:text-[#013220]'
+          )}
+          aria-label="Toggle dropdown"
+        >
+          <ChevronDown
+            className={cn(
+              'w-3 h-3 transition-transform duration-200',
+              isOpen && 'rotate-180'
+            )}
+          />
+        </button>
+      </div>
 
       {isOpen && (
-        <div className="absolute top-full left-0 pt-2 z-50">
+        <div className="absolute top-full left-0 z-50">
           <div className="bg-white shadow-lg border border-gray-100 py-3 px-4 min-w-[220px]">
             {item.children.map((child) => (
               <Link
                 key={child.href}
                 href={child.href}
                 className="block py-2 text-[14px] text-gray-700 hover:text-[#013220] transition-colors"
+                onClick={() => setIsOpen(false)}
               >
                 {child.label}
               </Link>
