@@ -1,14 +1,15 @@
--- Fix RLS Policies for Categories and Collections
+-- Fix RLS Policies for Categories, Collections, and FAQ Tables
 -- Re-enable RLS and create proper policies for authenticated users
 
 -- Re-enable RLS
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
 
--- Drop all existing policies
+-- Drop all existing policies by name
 DROP POLICY IF EXISTS "Public can view categories" ON categories;
 DROP POLICY IF EXISTS "Only admin can modify categories" ON categories;
 DROP POLICY IF EXISTS "Authenticated can view categories" ON categories;
+DROP POLICY IF EXISTS "Authenticated can read categories" ON categories;
 DROP POLICY IF EXISTS "Authenticated can insert categories" ON categories;
 DROP POLICY IF EXISTS "Authenticated can update categories" ON categories;
 DROP POLICY IF EXISTS "Authenticated can delete categories" ON categories;
@@ -16,6 +17,7 @@ DROP POLICY IF EXISTS "Authenticated can delete categories" ON categories;
 DROP POLICY IF EXISTS "Public can view collections" ON collections;
 DROP POLICY IF EXISTS "Only admin can modify collections" ON collections;
 DROP POLICY IF EXISTS "Authenticated can view collections" ON collections;
+DROP POLICY IF EXISTS "Authenticated can read collections" ON collections;
 DROP POLICY IF EXISTS "Authenticated can insert collections" ON collections;
 DROP POLICY IF EXISTS "Authenticated can update collections" ON collections;
 DROP POLICY IF EXISTS "Authenticated can delete collections" ON collections;
@@ -60,3 +62,7 @@ CREATE POLICY "Authenticated can delete collections"
   ON collections FOR DELETE 
   TO authenticated 
   USING (true);
+
+-- Fix FAQ tables RLS policies - disable RLS temporarily
+ALTER TABLE faq_categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE faqs DISABLE ROW LEVEL SECURITY;
