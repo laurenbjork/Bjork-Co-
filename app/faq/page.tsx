@@ -4,6 +4,7 @@ import Footer from '@/app/sections/Footer';
 import AnnouncementBar from '@/app/sections/AnnouncementBar';
 import Breadcrumb from '@/app/components/Breadcrumb';
 import FAQContent from '@/app/components/FAQContent';
+import { supabase } from '@/app/lib/supabase';
 
 interface FAQCategory {
   id: string;
@@ -19,11 +20,14 @@ interface FAQItem {
 
 async function getFAQs(): Promise<FAQCategory[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/faqs`, {
-      next: { revalidate: 60 }
-    });
-    if (!response.ok) throw new Error('Failed to fetch FAQs');
-    return await response.json();
+    const { data: categories, error: catError } = await supabase
+      .from('faq_categories')
+      .select('*, faqs(*)')
+      .order('sort_order', { ascending: true });
+
+    if (catError) throw catError;
+
+    return categories || [];
   } catch (error) {
     console.error('Error loading FAQs:', error);
     return [];
