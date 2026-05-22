@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { updateProduct } from '@/app/lib/supabase-admin';
-import { getProductById } from '@/app/lib/supabase-queries';
+import { updateProduct, assignCategoriesToProduct } from '@/app/lib/supabase-admin';
+import { getProductById, getAllCategories } from '@/app/lib/supabase-queries';
 import { ArrowLeft, Save } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -36,9 +36,12 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     seo_title: '',
     seo_description: '',
   });
+  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
     loadProduct();
+    loadCategories();
   }, [id]);
 
   const loadProduct = async () => {
@@ -62,11 +65,25 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           seo_title: product.seo_title || '',
           seo_description: product.seo_description || '',
         });
+        // Load assigned categories
+        if (product.categories) {
+          const assignedIds = product.categories.map((c: any) => c.category_id || c.id);
+          setSelectedCategories(assignedIds);
+        }
       }
     } catch (err) {
       setError('Failed to load product');
     } finally {
       setIsFetching(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const cats = await getAllCategories();
+      setCategories(cats);
+    } catch (err) {
+      console.error('Failed to load categories:', err);
     }
   };
 
@@ -82,6 +99,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       };
 
       await updateProduct(id, productData);
+      await assignCategoriesToProduct(id, selectedCategories);
       router.push('/admin/products');
       router.refresh();
     } catch (err: any) {
@@ -378,6 +396,40 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                   className="w-full h-32 object-cover rounded"
                 />
               )}
+            </div>
+
+            {/* Categories */}
+            <div className="bg-white border border-gray-200 p-6 space-y-4">
+              <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
+                Categories
+              </h2>
+              <div className="space-y-2">
+                {categories.length === 0 && (
+                  <p className="text-gray-500 text-[14px]">No categories found.</p>
+                )}
+                {categories.map((category) => (
+                  <label
+                    key={category.id}
+                    className="flex items-center gap-2 text-[14px] text-black cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCategories((prev) => [...prev, category.id]);
+                        } else {
+                          setSelectedCategories((prev) =>
+                            prev.filter((id) => id !== category.id)
+                          );
+                        }
+                      }}
+                      className="w-4 h-4 border-gray-300 rounded focus:ring-[#013220]"
+                    />
+                    {category.name}
+                  </label>
+                ))}
+              </div>
             </div>
 
             {/* SEO */}
