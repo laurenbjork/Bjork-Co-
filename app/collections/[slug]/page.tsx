@@ -7,7 +7,7 @@ import Breadcrumb from '@/app/components/Breadcrumb';
 import CollectionHeader from '@/app/components/CollectionHeader';
 import FilterBar from '@/app/components/FilterBar';
 import ProductGrid from '@/app/components/ProductGrid';
-import { products } from '@/app/data/products';
+import { getProductsByCategory } from '@/app/lib/supabase-queries';
 
 const collectionMetadata: Record<string, { title: string; description: string }> = {
   necklaces: {
@@ -105,9 +105,7 @@ export default async function CollectionPage({ params }: Props) {
   }
 
   const category = categoryMapping[slug];
-  const collectionProducts = products.filter(
-    (p) => p.category === category
-  );
+  const collectionProducts = await getProductsByCategory(category);
 
   return (
     <div className="flex flex-col min-h-screen">
