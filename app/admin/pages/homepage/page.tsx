@@ -82,11 +82,13 @@ export default function AdminHomepagePage() {
   const handleSaveHero = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('site_settings')
-        .upsert({ key: 'hero_image', value: heroImage }, { onConflict: 'key' });
+      const res = await fetch('/api/site-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hero_image: heroImage }),
+      });
 
-      if (error) throw error;
+      if (!res.ok) throw new Error(await res.text());
       alert('Hero image saved!');
     } catch (err) {
       console.error('Error saving hero image:', err);
