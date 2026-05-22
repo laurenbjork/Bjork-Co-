@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { updateProduct, assignCategoriesToProduct, assignCollectionsToProduct, uploadImage, getProductImages, saveProductImages, deleteProductImage } from '@/app/lib/supabase-admin';
+import { updateProduct, assignCategoriesToProduct, assignCollectionsToProduct } from '@/app/lib/supabase-admin';
 import { getProductById, getAllCategories, getAllCollections } from '@/app/lib/supabase-queries';
-import { ArrowLeft, Save, Upload, X, GripVertical, Star } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
 import { cn } from '@/app/lib/utils';
 
@@ -41,14 +41,11 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [collections, setCollections] = useState<Array<{id: string, name: string}>>([]);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  const [productImages, setProductImages] = useState<Array<{id: string, url: string, sort_order: number, is_hero: boolean}>>([]);
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     loadProduct();
     loadCategories();
     loadCollections();
-    loadProductImages();
   }, [id]);
 
   const loadProduct = async () => {
@@ -111,84 +108,6 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     }
   };
 
-  const loadProductImages = async () => {
-    try {
-      const images = await getProductImages(id);
-      setProductImages(images);
-    } catch (err) {
-      console.error('Failed to load product images:', err);
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    if (productImages.length + files.length > 5) {
-      alert('Maximum 5 images allowed');
-      return;
-    }
-
-    setUploadingImage(true);
-
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const fileName = `${Date.now()}-${file.name}`;
-        const path = `products/${id}/${fileName}`;
-        const url = await uploadImage(file, 'images', path);
-
-        const newImage = {
-          id: crypto.randomUUID(),
-          url,
-          sort_order: productImages.length + i,
-          is_hero: productImages.length === 0 && i === 0
-        };
-
-        setProductImages(prev => [...prev, newImage]);
-      }
-    } catch (err) {
-      console.error('Error uploading images:', err);
-      alert('Failed to upload images');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const handleImageDelete = async (imageId: string, imageUrl: string) => {
-    try {
-      await deleteProductImage(imageId, imageUrl);
-      setProductImages(prev => prev.filter(img => img.id !== imageId));
-      
-      // Update hero flag if the deleted image was hero
-      const remainingImages = productImages.filter(img => img.id !== imageId);
-      if (remainingImages.length > 0) {
-        setProductImages(prev => prev.map((img, idx) => ({
-          ...img,
-          is_hero: idx === 0
-        })));
-      }
-    } catch (err) {
-      console.error('Error deleting image:', err);
-      alert('Failed to delete image');
-    }
-  };
-
-  const handleImageReorder = (fromIndex: number, toIndex: number) => {
-    const reordered = [...productImages];
-    const [moved] = reordered.splice(fromIndex, 1);
-    reordered.splice(toIndex, 0, moved);
-
-    // Update sort_order and hero flag
-    const updated = reordered.map((img, idx) => ({
-      ...img,
-      sort_order: idx,
-      is_hero: idx === 0
-    }));
-
-    setProductImages(updated);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -198,20 +117,11 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       const productData = {
         ...formData,
         price: formData.price ? parseFloat(formData.price) : null,
-        hero_image: productImages.length > 0 ? productImages[0].url : '',
       };
 
       await updateProduct(id, productData);
       await assignCategoriesToProduct(id, selectedCategories);
       await assignCollectionsToProduct(id, selectedCollections);
-      
-      // Save product images
-      await saveProductImages(id, productImages.map(img => ({
-        url: img.url,
-        sort_order: img.sort_order,
-        is_hero: img.is_hero
-      })));
-      
       router.push('/admin/products');
       router.refresh();
     } catch (err: any) {
@@ -480,96 +390,33 @@ export default function EditProductPage({ params }: EditProductPageProps) {
               </div>
             </div>
 
-            {/* Images */}
+            {/* Image */}
             <div className="bg-white border border-gray-200 p-6 space-y-4">
               <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
-                Product Images ({productImages.length}/5)
+                Hero Image
               </h2>
-              
-              {/* Upload Button */}
               <div>
-                <input
-                  type="file"
-                  id="image-upload"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploadingImage || productImages.length >= 5}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className={cn(
-                    'flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded cursor-pointer transition-colors',
-                    uploadingImage || productImages.length >= 5
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:border-[#013220] hover:bg-gray-50'
-                  )}
-                >
-                  <Upload className="w-4 h-4" />
-                  <span className="text-[13px] font-medium">
-                    {uploadingImage ? 'Uploading...' : 'Upload Images'}
-                  </span>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Image URL
                 </label>
+                <input
+                  type="url"
+                  name="hero_image"
+                  value={formData.hero_image}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                  placeholder="https://..."
+                />
                 <p className="text-[12px] text-gray-500 mt-1">
-                  First image is the hero image. Drag to reorder.
+                  Upload to Storage first, then paste URL
                 </p>
               </div>
-
-              {/* Image Gallery */}
-              {productImages.length > 0 && (
-                <div className="space-y-2">
-                  {productImages.map((image, index) => (
-                    <div
-                      key={image.id}
-                      className="flex items-center gap-3 p-3 border border-gray-200 rounded bg-gray-50"
-                      draggable
-                      onDragStart={(e) => e.dataTransfer.setData('fromIndex', index.toString())}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const fromIndex = parseInt(e.dataTransfer.getData('fromIndex'));
-                        handleImageReorder(fromIndex, index);
-                      }}
-                    >
-                      {/* Drag Handle */}
-                      <div className="cursor-grab text-gray-400">
-                        <GripVertical className="w-5 h-5" />
-                      </div>
-
-                      {/* Hero Indicator */}
-                      {image.is_hero && (
-                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                      )}
-
-                      {/* Image Preview */}
-                      <img
-                        src={image.url}
-                        alt={`Product image ${index + 1}`}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-
-                      {/* Image Info */}
-                      <div className="flex-1">
-                        <p className="text-[13px] font-medium text-black">
-                          {image.is_hero ? 'Hero Image' : `Image ${index + 1}`}
-                        </p>
-                        <p className="text-[11px] text-gray-500">
-                          {image.url.split('/').pop()}
-                        </p>
-                      </div>
-
-                      {/* Delete Button */}
-                      <button
-                        type="button"
-                        onClick={() => handleImageDelete(image.id, image.url)}
-                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+              {formData.hero_image && (
+                <img
+                  src={formData.hero_image}
+                  alt="Product preview"
+                  className="w-full h-32 object-cover rounded"
+                />
               )}
             </div>
 

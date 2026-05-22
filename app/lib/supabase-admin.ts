@@ -262,22 +262,13 @@ export async function setHeroImage(productId: string, imageId: string) {
   if (error) throw error;
 }
 
-export async function deleteProductImage(imageId: string, imageUrl?: string) {
-  // Delete from database
+export async function deleteProductImage(imageId: string) {
   const { error } = await supabase
     .from('product_images')
     .delete()
     .eq('id', imageId);
 
   if (error) throw error;
-
-  // Delete from storage if URL provided
-  if (imageUrl) {
-    const path = imageUrl.split('/').pop();
-    if (path) {
-      await deleteImageFromStorage('images', path);
-    }
-  }
 }
 
 export async function getProductImages(productId: string) {
@@ -311,34 +302,4 @@ export async function uploadImage(file: File, bucket: string, path: string) {
     .getPublicUrl(data.path);
 
   return publicUrl;
-}
-
-export async function deleteImageFromStorage(bucket: string, path: string) {
-  const { error } = await supabase.storage
-    .from(bucket)
-    .remove([path]);
-
-  if (error) throw error;
-}
-
-export async function saveProductImages(productId: string, images: Array<{ url: string, sort_order: number, is_hero: boolean }>) {
-  // Delete existing images
-  await supabase
-    .from('product_images')
-    .delete()
-    .eq('product_id', productId);
-
-  // Insert new images
-  if (images.length > 0) {
-    const { error } = await supabase
-      .from('product_images')
-      .insert(images.map(img => ({
-        product_id: productId,
-        image_url: img.url,
-        sort_order: img.sort_order,
-        is_hero: img.is_hero
-      })));
-
-    if (error) throw error;
-  }
 }
