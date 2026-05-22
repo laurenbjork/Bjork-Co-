@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createProduct } from '@/app/lib/supabase-admin';
+import { createProduct, assignCategoriesToProduct, assignCollectionsToProduct } from '@/app/lib/supabase-admin';
+import { getAllCategories, getAllCollections } from '@/app/lib/supabase-queries';
 import { ArrowLeft, Save } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -28,6 +29,33 @@ export default function NewProductPage() {
     seo_title: '',
     seo_description: '',
   });
+  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [collections, setCollections] = useState<Array<{id: string, name: string}>>([]);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadCategories();
+    loadCollections();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const cats = await getAllCategories();
+      setCategories(cats);
+    } catch (err) {
+      console.error('Failed to load categories:', err);
+    }
+  };
+
+  const loadCollections = async () => {
+    try {
+      const cols = await getAllCollections();
+      setCollections(cols);
+    } catch (err) {
+      console.error('Failed to load collections:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +69,11 @@ export default function NewProductPage() {
         slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
       };
 
-      await createProduct(productData);
+      const newProduct = await createProduct(productData);
+      if (newProduct?.id) {
+        await assignCategoriesToProduct(newProduct.id, selectedCategories);
+        await assignCollectionsToProduct(newProduct.id, selectedCollections);
+      }
       router.push('/admin/products');
       router.refresh();
     } catch (err: any) {
@@ -302,6 +334,74 @@ export default function NewProductPage() {
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
                 />
+              </div>
+            </div>
+
+            {/* Categories */}
+            <div className="bg-white border border-gray-200 p-6 space-y-4">
+              <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
+                Categories
+              </h2>
+              <div className="space-y-2">
+                {categories.length === 0 && (
+                  <p className="text-gray-500 text-[14px]">No categories found.</p>
+                )}
+                {categories.map((category) => (
+                  <label
+                    key={category.id}
+                    className="flex items-center gap-2 text-[14px] text-black cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCategories((prev) => [...prev, category.id]);
+                        } else {
+                          setSelectedCategories((prev) =>
+                            prev.filter((id) => id !== category.id)
+                          );
+                        }
+                      }}
+                      className="w-4 h-4 border-gray-300 rounded focus:ring-[#013220]"
+                    />
+                    {category.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Collections */}
+            <div className="bg-white border border-gray-200 p-6 space-y-4">
+              <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
+                Collections
+              </h2>
+              <div className="space-y-2">
+                {collections.length === 0 && (
+                  <p className="text-gray-500 text-[14px]">No collections found.</p>
+                )}
+                {collections.map((collection) => (
+                  <label
+                    key={collection.id}
+                    className="flex items-center gap-2 text-[14px] text-black cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCollections.includes(collection.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCollections((prev) => [...prev, collection.id]);
+                        } else {
+                          setSelectedCollections((prev) =>
+                            prev.filter((id) => id !== collection.id)
+                          );
+                        }
+                      }}
+                      className="w-4 h-4 border-gray-300 rounded focus:ring-[#013220]"
+                    />
+                    {collection.name}
+                  </label>
+                ))}
               </div>
             </div>
 
