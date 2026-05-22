@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/app/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+function getAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createClient(url, serviceKey, { auth: { persistSession: false } });
+}
 
 // GET all site settings
 export async function GET() {
@@ -39,17 +46,21 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const updates = [];
 
+    const admin = getAdminClient();
+
     for (const [key, value] of Object.entries(body)) {
       if (typeof value === 'string') {
         updates.push(
-          supabase
+          admin
             .from('site_settings')
             .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
         );
       }
     }
 
-    await Promise.all(updates);
+    const results = await Promise.all(updates);
+    const failed = results.find((r) => r.error);
+    if (failed?.error) throw failed.error;
 
     return NextResponse.json({ success: true });
   } catch (error) {
