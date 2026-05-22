@@ -13,8 +13,11 @@ export async function middleware(request: NextRequest) {
   }
 
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Check for auth cookie
-    const authCookie = request.cookies.get('sb-access-token');
+    // Check for any Supabase auth cookie
+    const cookies = request.cookies.getAll();
+    const authCookie = cookies.find(cookie => 
+      cookie.name.includes('sb-') && cookie.name.includes('auth-token')
+    );
     
     if (!authCookie) {
       // Redirect to login if no auth cookie
