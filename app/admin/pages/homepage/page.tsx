@@ -39,16 +39,12 @@ export default function AdminHomepagePage() {
 
   const loadHeroSettings = async () => {
     try {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('key, value')
-        .in('key', ['hero_image', 'hero_heading', 'hero_button_link']);
-      if (data && !error) {
-        const map = data.reduce((acc, row) => { acc[row.key] = row.value; return acc; }, {} as Record<string, string>);
-        if (map['hero_image']) setHeroImage(map['hero_image']);
-        if (map['hero_heading']) setHeroHeading(map['hero_heading']);
-        if (map['hero_button_link']) setHeroButtonLink(map['hero_button_link']);
-      }
+      const res = await fetch('/api/site-settings');
+      if (!res.ok) return;
+      const map = await res.json();
+      if (map['hero_image']) setHeroImage(map['hero_image']);
+      if (map['hero_heading']) setHeroHeading(map['hero_heading']);
+      if (map['hero_button_link']) setHeroButtonLink(map['hero_button_link']);
     } catch (err) {
       console.error('Error loading hero settings:', err);
     }
