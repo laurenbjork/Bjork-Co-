@@ -57,14 +57,37 @@ export async function getProductById(id: string) {
 }
 
 export async function getProductsByCategory(categorySlug: string) {
+  // First get the category ID from slug
+  const { data: categoryData, error: catError } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('slug', categorySlug)
+    .single();
+
+  if (catError || !categoryData) {
+    console.error('Category not found:', categorySlug, catError);
+    return [];
+  }
+
+  // Get product IDs assigned to this category
+  const { data: assignments, error: assignError } = await supabase
+    .from('product_categories')
+    .select('product_id')
+    .eq('category_id', categoryData.id);
+
+  if (assignError || !assignments || assignments.length === 0) {
+    return [];
+  }
+
+  const productIds = assignments.map((a) => a.product_id);
+
+  // Fetch the actual products
   const { data, error } = await supabase
     .from('products')
-    .select(`
-      *,
-      categories!inner(product_categories!inner(categories!inner(slug)))
-    `)
-    .eq('categories.slug', categorySlug)
-    .eq('status', 'published');
+    .select('*')
+    .in('id', productIds)
+    .eq('status', 'published')
+    .order('sort_order', { ascending: true });
 
   if (error) {
     console.error('Error fetching products by category:', error);

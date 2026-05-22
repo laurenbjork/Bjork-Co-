@@ -104,8 +104,7 @@ export default async function CollectionPage({ params }: Props) {
     notFound();
   }
 
-  const category = categoryMapping[slug];
-  const collectionProducts = await getProductsByCategory(category);
+  const collectionProducts = await getProductsByCategory(slug);
 
   return (
     <div className="flex flex-col min-h-screen">
