@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import Header from '@/app/sections/Header';
 import Footer from '@/app/sections/Footer';
