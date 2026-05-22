@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { updateProduct, assignCategoriesToProduct } from '@/app/lib/supabase-admin';
-import { getProductById, getAllCategories } from '@/app/lib/supabase-queries';
+import { updateProduct, assignCategoriesToProduct, assignCollectionsToProduct } from '@/app/lib/supabase-admin';
+import { getProductById, getAllCategories, getAllCollections } from '@/app/lib/supabase-queries';
 import { ArrowLeft, Save } from 'lucide-react';
+import { supabase } from '@/app/lib/supabase';
 import { cn } from '@/app/lib/utils';
 
 interface EditProductPageProps {
@@ -38,10 +39,13 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   });
   const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [collections, setCollections] = useState<Array<{id: string, name: string}>>([]);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
 
   useEffect(() => {
     loadProduct();
     loadCategories();
+    loadCollections();
   }, [id]);
 
   const loadProduct = async () => {
@@ -70,6 +74,14 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           const assignedIds = product.categories.map((c: any) => c.category_id || c.id);
           setSelectedCategories(assignedIds);
         }
+        // Load assigned collections
+        const { data: collData } = await supabase
+          .from('product_collections')
+          .select('collection_id')
+          .eq('product_id', id);
+        if (collData) {
+          setSelectedCollections(collData.map((c: any) => c.collection_id));
+        }
       }
     } catch (err) {
       setError('Failed to load product');
@@ -87,6 +99,15 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     }
   };
 
+  const loadCollections = async () => {
+    try {
+      const cols = await getAllCollections();
+      setCollections(cols);
+    } catch (err) {
+      console.error('Failed to load collections:', err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -100,6 +121,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
 
       await updateProduct(id, productData);
       await assignCategoriesToProduct(id, selectedCategories);
+      await assignCollectionsToProduct(id, selectedCollections);
       router.push('/admin/products');
       router.refresh();
     } catch (err: any) {
@@ -427,6 +449,40 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                       className="w-4 h-4 border-gray-300 rounded focus:ring-[#013220]"
                     />
                     {category.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Collections */}
+            <div className="bg-white border border-gray-200 p-6 space-y-4">
+              <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
+                Collections
+              </h2>
+              <div className="space-y-2">
+                {collections.length === 0 && (
+                  <p className="text-gray-500 text-[14px]">No collections found.</p>
+                )}
+                {collections.map((collection) => (
+                  <label
+                    key={collection.id}
+                    className="flex items-center gap-2 text-[14px] text-black cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCollections.includes(collection.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCollections((prev) => [...prev, collection.id]);
+                        } else {
+                          setSelectedCollections((prev) =>
+                            prev.filter((id) => id !== collection.id)
+                          );
+                        }
+                      }}
+                      className="w-4 h-4 border-gray-300 rounded focus:ring-[#013220]"
+                    />
+                    {collection.name}
                   </label>
                 ))}
               </div>
