@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/app/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // PUT update Instagram post
 export async function PUT(
   request: NextRequest,
