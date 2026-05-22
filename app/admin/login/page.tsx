@@ -20,12 +20,10 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await signInWithEmail(email, password);
-      console.log('Login successful:', result);
+      await signInWithEmail(email, password);
       router.push('/admin');
       router.refresh();
     } catch (err: any) {
-      console.error('Login error:', err);
       setError(err.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
