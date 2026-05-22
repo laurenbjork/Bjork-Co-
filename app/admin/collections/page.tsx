@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { getAllCollections } from '@/app/lib/supabase-queries';
-import { updateCollection } from '@/app/lib/supabase-admin';
+import { createCollection, updateCollection } from '@/app/lib/supabase-admin';
 import { Plus, Edit2, Trash2, X, Save } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -13,6 +12,8 @@ export default function AdminCollectionsPage() {
   const [editingCollection, setEditingCollection] = useState<any>(null);
   const [editForm, setEditForm] = useState({ name: '', slug: '', description: '', sort_order: 0 });
   const [isSaving, setIsSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: '', slug: '', description: '', sort_order: 0 });
 
   useEffect(() => {
     loadCollections();
@@ -38,13 +39,16 @@ export default function AdminCollectionsPage() {
             Manage product collections ({collections.length} collections)
           </p>
         </div>
-        <Link
-          href="/admin/collections/new"
+        <button
+          onClick={() => {
+            setCreating(true);
+            setCreateForm({ name: '', slug: '', description: '', sort_order: 0 });
+          }}
           className="flex items-center gap-2 px-4 py-3 bg-[#013220] text-white text-[13px] font-medium tracking-[0.05em] hover:bg-black transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Collection
-        </Link>
+        </button>
       </div>
 
       {loading ? (
@@ -131,6 +135,111 @@ export default function AdminCollectionsPage() {
               <p className="text-gray-500 text-[14px]">No collections found.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Create Modal */}
+      {creating && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-serif text-[20px] text-black">Add Collection</h2>
+              <button
+                onClick={() => setCreating(false)}
+                className="p-2 text-gray-400 hover:text-black transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                  placeholder="e.g., Bridal"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Slug *
+                </label>
+                <input
+                  type="text"
+                  value={createForm.slug}
+                  onChange={(e) => setCreateForm({ ...createForm, slug: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                  placeholder="e.g., bridal"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={createForm.description}
+                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Sort Order
+                </label>
+                <input
+                  type="number"
+                  value={createForm.sort_order}
+                  onChange={(e) => setCreateForm({ ...createForm, sort_order: parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setCreating(false)}
+                className="flex-1 py-3 border border-gray-300 text-[13px] font-medium tracking-[0.05em] hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!createForm.name || !createForm.slug) {
+                    alert('Name and slug are required');
+                    return;
+                  }
+                  setIsSaving(true);
+                  try {
+                    await createCollection(createForm);
+                    setCreating(false);
+                    loadCollections();
+                  } catch (err) {
+                    console.error('Error creating collection:', err);
+                    alert('Failed to create collection');
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+                disabled={isSaving}
+                className={cn(
+                  'flex-1 py-3 bg-[#013220] text-white text-[13px] font-medium tracking-[0.05em] flex items-center justify-center gap-2',
+                  isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:bg-black transition-colors'
+                )}
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? 'Creating...' : 'Create Collection'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
