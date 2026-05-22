@@ -6,35 +6,16 @@ export type AuthUser = {
 };
 
 export async function signInWithEmail(email: string, password: string) {
-  console.log('=== LOGIN DEBUG ===');
-  console.log('Email:', email);
-  console.log('Password length:', password.length);
-  console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-  
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password: password,
-    });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password: password,
+  });
 
-    if (error) {
-      console.error('Supabase Error:', {
-        message: error.message,
-        status: error.status,
-        code: error.code,
-        name: error.name,
-      });
-      throw error;
-    }
-
-    console.log('Login SUCCESS!');
-    console.log('User:', data.user?.email);
-    console.log('Session exists:', !!data.session);
-    return data;
-  } catch (err: any) {
-    console.error('Caught error:', err);
-    throw err;
+  if (error) {
+    throw error;
   }
+
+  return data;
 }
 
 export async function signOut() {
