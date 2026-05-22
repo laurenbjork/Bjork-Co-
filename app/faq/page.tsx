@@ -30,7 +30,6 @@ async function getFAQs(): Promise<FAQCategory[]> {
   }
 }
 
-// FAQ Server Component
 export default async function FAQPage() {
   const categories = await getFAQs();
 
