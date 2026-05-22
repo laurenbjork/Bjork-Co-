@@ -14,8 +14,8 @@ export async function middleware(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession();
 
   // If not authenticated and trying to access admin routes, redirect to login
-  if (!session && pathname.startsWith('/admin')) {
-    const loginUrl = new URL('/login', request.url);
+  if (!session && pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    const loginUrl = new URL('/admin/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
