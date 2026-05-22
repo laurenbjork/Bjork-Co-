@@ -13,21 +13,19 @@ export async function middleware(request: NextRequest) {
   }
 
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Check for any Supabase auth cookie
+    // Check for any Supabase cookie
     const cookies = request.cookies.getAll();
-    const authCookie = cookies.find(cookie => 
-      cookie.name.includes('sb-') && cookie.name.includes('auth-token')
-    );
+    const sbCookie = cookies.find(cookie => cookie.name.startsWith('sb-'));
     
-    if (!authCookie) {
-      // Redirect to login if no auth cookie
+    if (!sbCookie) {
+      // Redirect to login if no Supabase cookie
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
 
     // Verify the session with Supabase
     try {
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      const { data: { user }, error } = await supabase.auth.getUser(authCookie.value);
+      const { data: { user }, error } = await supabase.auth.getUser();
 
       if (error || !user) {
         return NextResponse.redirect(new URL('/admin/login', request.url));
