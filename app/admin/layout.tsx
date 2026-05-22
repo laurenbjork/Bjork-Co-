@@ -22,7 +22,9 @@ import {
   Ruler,
   BarChart3,
   Info,
-  Home
+  Home,
+  HelpCircle,
+  Share2
 } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -41,6 +43,8 @@ const navItems = [
   { href: '/admin/pages/homepage', label: 'Homepage', icon: Home },
   { href: '/admin/pages/about', label: 'About Page', icon: Info },
   { href: '/admin/pages/contact', label: 'Contact Page', icon: Mail },
+  { href: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
+  { href: '/admin/social-links', label: 'Social Links', icon: Share2 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

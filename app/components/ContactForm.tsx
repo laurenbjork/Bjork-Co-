@@ -153,7 +153,7 @@ export default function ContactForm({ onSubmit }: ContactFormProps) {
         type="submit"
         disabled={isSubmitting}
         className={cn(
-          'w-full py-4 px-8 text-[13px] font-medium tracking-[0.1em] uppercase transition-all duration-300',
+          'w-full py-4 px-8 text-[13px] font-medium tracking-[0.1em] uppercase transition-all duration-300 rounded-full',
           'bg-[#013220] text-white hover:bg-black',
           isSubmitting && 'opacity-70 cursor-not-allowed'
         )}

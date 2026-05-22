@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
-import { FAQItem } from '@/app/data/faq';
+
+interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+}
 
 interface FAQAccordionProps {
   items: FAQItem[];
@@ -45,9 +50,10 @@ export default function FAQAccordion({ items }: FAQAccordionProps) {
             )}
           >
             <div className="px-5 pb-5">
-              <p className="text-[15px] text-gray-600 leading-relaxed whitespace-pre-line">
-                {item.answer}
-              </p>
+              <div 
+                className="text-[15px] text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: item.answer }}
+              />
             </div>
           </div>
         </div>

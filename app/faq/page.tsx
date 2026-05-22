@@ -1,18 +1,46 @@
-import { Metadata } from 'next';
-import { useState } from 'react';
+'use client';
+
+import { useState, useEffect } from 'react';
 import Header from '@/app/sections/Header';
 import Footer from '@/app/sections/Footer';
 import AnnouncementBar from '@/app/sections/AnnouncementBar';
 import Breadcrumb from '@/app/components/Breadcrumb';
 import FAQAccordion from '@/app/components/FAQAccordion';
-import { faqItems, faqCategories } from '@/app/data/faq';
 
-export const metadata: Metadata = {
-  title: 'FAQ | BJÖRK & CO.',
-  description: 'Find answers to frequently asked questions about orders, shipping, returns, jewelry care, and more.',
-};
+interface FAQCategory {
+  id: string;
+  name: string;
+  faqs: FAQItem[];
+}
+
+interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+}
 
 export default function FAQPage() {
+  const [categories, setCategories] = useState<FAQCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadFAQs();
+  }, []);
+
+  const loadFAQs = async () => {
+    try {
+      const response = await fetch('/api/faqs');
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error('Error loading FAQs:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen">
       <AnnouncementBar />
@@ -34,22 +62,24 @@ export default function FAQPage() {
           </p>
         </div>
 
-        {/* FAQ Categories */}
-        <div className="space-y-16 pb-24">
-          {faqCategories.map((category) => {
-            const categoryFAQs = faqItems.filter((item) => item.category === category);
-            if (categoryFAQs.length === 0) return null;
-
-            return (
-              <section key={category}>
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Loading FAQs...</p>
+          </div>
+        ) : (
+          /* FAQ Categories */
+          <div className="space-y-16 pb-24">
+            {categories.map((category) => (
+              <section key={category.id}>
                 <h2 className="font-serif text-[28px] text-black mb-8 pb-4 border-b border-gray-200">
-                  {category}
+                  {category.name}
                 </h2>
-                <FAQAccordion items={categoryFAQs} />
+                <FAQAccordion items={category.faqs} />
               </section>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Footer />
