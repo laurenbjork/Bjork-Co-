@@ -5,8 +5,9 @@ import { createClient } from '@supabase/supabase-js';
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  console.log('[site-settings] serviceKey present:', !!serviceKey);
   if (!serviceKey) {
-    console.warn('SUPABASE_SERVICE_ROLE_KEY not set, falling back to anon client');
+    console.warn('[site-settings] SUPABASE_SERVICE_ROLE_KEY not set, falling back to anon client');
     return supabase;
   }
   return createClient(url, serviceKey, { auth: { persistSession: false } });
@@ -64,7 +65,10 @@ export async function PUT(request: NextRequest) {
 
     const results = await Promise.all(updates);
     const failed = results.find((r) => r.error);
-    if (failed?.error) throw failed.error;
+    if (failed?.error) {
+      console.error('[site-settings] Upsert error:', JSON.stringify(failed.error));
+      throw failed.error;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
