@@ -1,10 +1,9 @@
-'use client';
-import { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import Header from '@/app/sections/Header';
 import Footer from '@/app/sections/Footer';
 import AnnouncementBar from '@/app/sections/AnnouncementBar';
 import Breadcrumb from '@/app/components/Breadcrumb';
-import FAQAccordion from '@/app/components/FAQAccordion';
+import FAQContent from '@/app/components/FAQContent';
 
 interface FAQCategory {
   id: string;
@@ -18,27 +17,21 @@ interface FAQItem {
   answer: string;
 }
 
-export default function FAQPage() {
-  const [categories, setCategories] = useState<FAQCategory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+async function getFAQs(): Promise<FAQCategory[]> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/faqs`, {
+      next: { revalidate: 60 }
+    });
+    if (!response.ok) throw new Error('Failed to fetch FAQs');
+    return await response.json();
+  } catch (error) {
+    console.error('Error loading FAQs:', error);
+    return [];
+  }
+}
 
-  useEffect(() => {
-    loadFAQs();
-  }, []);
-
-  const loadFAQs = async () => {
-    try {
-      const response = await fetch('/api/faqs');
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data);
-      }
-    } catch (error) {
-      console.error('Error loading FAQs:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export default async function FAQPage() {
+  const categories = await getFAQs();
 
   return (
     <main className="min-h-screen">
@@ -61,24 +54,14 @@ export default function FAQPage() {
           </p>
         </div>
 
-        {/* Loading State */}
-        {isLoading ? (
+        {/* FAQ Content */}
+        <Suspense fallback={
           <div className="text-center py-12">
             <p className="text-gray-500">Loading FAQs...</p>
           </div>
-        ) : (
-          /* FAQ Categories */
-          <div className="space-y-16 pb-24">
-            {categories.map((category) => (
-              <section key={category.id}>
-                <h2 className="font-serif text-[28px] text-black mb-8 pb-4 border-b border-gray-200">
-                  {category.name}
-                </h2>
-                <FAQAccordion items={category.faqs} />
-              </section>
-            ))}
-          </div>
-        )}
+        }>
+          <FAQContent categories={categories} />
+        </Suspense>
       </div>
 
       <Footer />
