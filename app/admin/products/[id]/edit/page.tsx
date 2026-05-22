@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { updateProduct, assignCategoriesToProduct, assignCollectionsToProduct } from '@/app/lib/supabase-admin';
+import { updateProduct, assignCategoriesToProduct, assignCollectionsToProduct, uploadImage, addProductImage, updateProductImagesOrder, setHeroImage, deleteProductImage, getProductImages } from '@/app/lib/supabase-admin';
 import { getProductById, getAllCategories, getAllCollections } from '@/app/lib/supabase-queries';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X, Star, GripHorizontal } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
 import { cn } from '@/app/lib/utils';
 
@@ -33,7 +33,6 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     status: 'draft',
     featured: false,
     sort_order: 0,
-    hero_image: '',
     seo_title: '',
     seo_description: '',
   });
@@ -41,12 +40,27 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [collections, setCollections] = useState<Array<{id: string, name: string}>>([]);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [productImages, setProductImages] = useState<Array<{id: string, image_url: string, sort_order: number, is_hero: boolean}>>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
+  const [isDropZoneActive, setIsDropZoneActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadProduct();
     loadCategories();
     loadCollections();
+    loadProductImages();
   }, [id]);
+
+  const loadProductImages = async () => {
+    try {
+      const images = await getProductImages(id);
+      setProductImages(images);
+    } catch (err) {
+      console.error('Failed to load product images:', err);
+    }
+  };
 
   const loadProduct = async () => {
     try {
@@ -65,7 +79,6 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           status: product.status || 'draft',
           featured: product.featured || false,
           sort_order: product.sort_order || 0,
-          hero_image: product.hero_image || '',
           seo_title: product.seo_title || '',
           seo_description: product.seo_description || '',
         });
@@ -114,9 +127,12 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     setIsLoading(true);
 
     try {
+      // Set hero_image from product images
+      const heroImg = productImages.find(img => img.is_hero);
       const productData = {
         ...formData,
         price: formData.price ? parseFloat(formData.price) : null,
+        hero_image: heroImg?.image_url || productImages[0]?.image_url || '',
       };
 
       await updateProduct(id, productData);
@@ -137,6 +153,96 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
+  };
+
+  // === Image Upload Handlers ===
+  const uploadFiles = async (files: File[]) => {
+    setIsUploadingImages(true);
+    try {
+      for (const file of files) {
+        const fileName = `${id}/${Date.now()}-${file.name}`;
+        const publicUrl = await uploadImage(file, 'product-images', fileName);
+        const isHero = productImages.length === 0;
+        await addProductImage(id, publicUrl, isHero);
+      }
+      await loadProductImages();
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      setError('Failed to upload image(s)');
+    } finally {
+      setIsUploadingImages(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      await uploadFiles(files);
+    }
+    e.target.value = '';
+  };
+
+  const handleDropZoneDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDropZoneActive(true);
+  };
+
+  const handleDropZoneDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDropZoneActive(false);
+  };
+
+  const handleDropZoneDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDropZoneActive(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length > 0) {
+      await uploadFiles(files);
+    }
+  };
+
+  // === Image Reorder Handlers ===
+  const handleImageDragStart = (index: number) => {
+    setDraggedImageIndex(index);
+  };
+
+  const handleImageDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedImageIndex === null || draggedImageIndex === index) return;
+
+    const reordered = [...productImages];
+    const [dragged] = reordered.splice(draggedImageIndex, 1);
+    reordered.splice(index, 0, dragged);
+    setProductImages(reordered);
+    setDraggedImageIndex(index);
+  };
+
+  const handleImageDragEnd = async () => {
+    setDraggedImageIndex(null);
+    const updates = productImages.map((img, i) => ({ id: img.id, sort_order: i }));
+    try {
+      await updateProductImagesOrder(updates);
+    } catch (err) {
+      console.error('Failed to update image order:', err);
+    }
+  };
+
+  const handleSetHero = async (imageId: string) => {
+    try {
+      await setHeroImage(id, imageId);
+      await loadProductImages();
+    } catch (err) {
+      console.error('Failed to set hero image:', err);
+    }
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    try {
+      await deleteProductImage(imageId);
+      setProductImages((prev) => prev.filter((img) => img.id !== imageId));
+    } catch (err) {
+      console.error('Failed to delete image:', err);
+    }
   };
 
   if (isFetching) {
@@ -390,36 +496,6 @@ export default function EditProductPage({ params }: EditProductPageProps) {
               </div>
             </div>
 
-            {/* Image */}
-            <div className="bg-white border border-gray-200 p-6 space-y-4">
-              <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
-                Hero Image
-              </h2>
-              <div>
-                <label className="block text-[13px] font-medium text-black mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="url"
-                  name="hero_image"
-                  value={formData.hero_image}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
-                  placeholder="https://..."
-                />
-                <p className="text-[12px] text-gray-500 mt-1">
-                  Upload to Storage first, then paste URL
-                </p>
-              </div>
-              {formData.hero_image && (
-                <img
-                  src={formData.hero_image}
-                  alt="Product preview"
-                  className="w-full h-32 object-cover rounded"
-                />
-              )}
-            </div>
-
             {/* Categories */}
             <div className="bg-white border border-gray-200 p-6 space-y-4">
               <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
@@ -525,6 +601,108 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           </div>
         </div>
       </form>
+
+      {/* Product Images - Full Width */}
+      <div className="bg-white border border-gray-200 p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+          <h2 className="font-serif text-[18px] text-black">
+            Product Images
+          </h2>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingImages}
+            className="flex items-center gap-2 px-3 py-2 bg-[#013220] text-white text-[13px] font-medium hover:bg-black transition-colors disabled:opacity-50"
+          >
+            <Upload className="w-4 h-4" />
+            {isUploadingImages ? 'Uploading...' : 'Upload Images'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+        </div>
+
+        {/* Drop Zone */}
+        <div
+          onDragOver={handleDropZoneDragOver}
+          onDragLeave={handleDropZoneDragLeave}
+          onDrop={handleDropZoneDrop}
+          className={cn(
+            'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
+            isDropZoneActive
+              ? 'border-[#013220] bg-[#013220]/5'
+              : 'border-gray-300'
+          )}
+        >
+          <p className="text-[13px] text-gray-500">
+            Drag and drop images here, or click &quot;Upload Images&quot; above
+          </p>
+        </div>
+
+        {/* Image Gallery */}
+        {productImages.length > 0 && (
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {productImages.map((image, index) => (
+              <div
+                key={image.id}
+                draggable
+                onDragStart={() => handleImageDragStart(index)}
+                onDragOver={(e) => handleImageDragOver(e, index)}
+                onDragEnd={handleImageDragEnd}
+                className={cn(
+                  'relative flex-shrink-0 w-36 h-36 group border-2 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all',
+                  image.is_hero ? 'border-[#013220]' : 'border-gray-200',
+                  draggedImageIndex === index ? 'opacity-50' : 'opacity-100'
+                )}
+              >
+                <img
+                  src={image.image_url}
+                  alt={`Product image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                {/* Hero Badge */}
+                {image.is_hero && (
+                  <div className="absolute top-1 left-1 bg-[#013220] text-white px-1.5 py-0.5 text-[10px] font-medium rounded">
+                    MAIN
+                  </div>
+                )}
+                {/* Overlay Controls */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => handleSetHero(image.id)}
+                    title="Set as main image"
+                    className="p-1.5 bg-white rounded-full hover:bg-yellow-100 transition-colors"
+                  >
+                    <Star className={cn('w-4 h-4', image.is_hero ? 'fill-yellow-500 text-yellow-500' : 'text-gray-700')} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteImage(image.id)}
+                    title="Delete image"
+                    className="p-1.5 bg-white rounded-full hover:bg-red-100 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-red-600" />
+                  </button>
+                </div>
+                {/* Drag Handle */}
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <GripHorizontal className="w-4 h-4 text-white" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {productImages.length === 0 && (
+          <p className="text-[14px] text-gray-500 text-center py-4">No images uploaded yet.</p>
+        )}
+      </div>
     </div>
   );
 }
