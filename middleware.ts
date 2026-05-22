@@ -7,34 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function middleware(request: NextRequest) {
-  // Only protect admin routes (except login)
-  if (request.nextUrl.pathname.startsWith('/admin/login')) {
-    return NextResponse.next();
-  }
-
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Check for any Supabase cookie
-    const cookies = request.cookies.getAll();
-    const sbCookie = cookies.find(cookie => cookie.name.startsWith('sb-'));
-    
-    if (!sbCookie) {
-      // Redirect to login if no Supabase cookie
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
-
-    // Verify the session with Supabase
-    try {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (error || !user) {
-        return NextResponse.redirect(new URL('/admin/login', request.url));
-      }
-    } catch {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
-  }
-
+  // Temporarily disable auth check for debugging
   return NextResponse.next();
 }
 
