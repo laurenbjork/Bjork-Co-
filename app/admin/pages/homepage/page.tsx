@@ -37,13 +37,10 @@ export default function AdminHomepagePage() {
 
   const loadHeroImage = async () => {
     try {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('value')
-        .eq('key', 'hero_image')
-        .single();
-      if (data && !error) {
-        setHeroImage(data.value);
+      const res = await fetch('/api/site-settings');
+      if (res.ok) {
+        const settings = await res.json();
+        if (settings.hero_image) setHeroImage(settings.hero_image);
       }
     } catch (err) {
       console.error('Error loading hero image:', err);
@@ -82,11 +79,12 @@ export default function AdminHomepagePage() {
   const handleSaveHero = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('site_settings')
-        .upsert({ key: 'hero_image', value: heroImage }, { onConflict: 'key' });
-
-      if (error) throw error;
+      const res = await fetch('/api/site-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hero_image: heroImage }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
       alert('Hero image saved!');
     } catch (err) {
       console.error('Error saving hero image:', err);
