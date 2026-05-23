@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { updateProduct, assignCategoriesToProduct, assignCollectionsToProduct, uploadImage, addProductImage, updateProductImagesOrder, setHeroImage, deleteProductImage, getProductImages } from '@/app/lib/supabase-admin';
@@ -10,12 +10,12 @@ import { supabase } from '@/app/lib/supabase';
 import { cn } from '@/app/lib/utils';
 
 interface EditProductPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function EditProductPage({ params }: EditProductPageProps) {
   const router = useRouter();
-  const { id } = params;
+  const { id } = use(params);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
