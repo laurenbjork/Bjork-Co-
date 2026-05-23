@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS instagram_posts (
 -- Enable RLS
 ALTER TABLE instagram_posts ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Public can view active instagram posts" ON instagram_posts;
+DROP POLICY IF EXISTS "Only admins can manage instagram posts" ON instagram_posts;
+
 -- RLS Policies
 CREATE POLICY "Public can view active instagram posts" 
   ON instagram_posts FOR SELECT 
@@ -21,5 +25,5 @@ CREATE POLICY "Only admins can manage instagram posts"
   USING (true);
 
 -- Indexes
-CREATE INDEX idx_instagram_posts_sort ON instagram_posts(sort_order);
-CREATE INDEX idx_instagram_posts_active ON instagram_posts(is_active);
+CREATE INDEX IF NOT EXISTS idx_instagram_posts_sort ON instagram_posts(sort_order);
+CREATE INDEX IF NOT EXISTS idx_instagram_posts_active ON instagram_posts(is_active);
