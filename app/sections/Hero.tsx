@@ -14,10 +14,15 @@ async function getHeroImage(): Promise<string | null> {
         cache: 'no-store',
       }
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error('[Hero] site_settings fetch failed:', res.status, await res.text());
+      return null;
+    }
     const rows = await res.json();
+    console.log('[Hero] site_settings rows:', JSON.stringify(rows));
     return rows?.[0]?.value || null;
-  } catch {
+  } catch (e) {
+    console.error('[Hero] fetch error:', e);
     return null;
   }
 }
