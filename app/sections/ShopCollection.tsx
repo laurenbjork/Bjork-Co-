@@ -33,7 +33,7 @@ export default async function ShopCollection() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {products.map((product: any) => (
-              <Link key={product.id} href={`/shop/${product.slug}`} className="block group">
+              <Link key={product.id} href={`/product/${product.slug}`} className="block group">
                 <div className="relative aspect-[3/4] mb-4 bg-gray-100 overflow-hidden">
                   {product.hero_image && product.hero_image.startsWith('http') ? (
                     <img
