@@ -33,6 +33,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     status: 'draft',
     featured: false,
     sort_order: 0,
+    hero_image: '',
+    hover_image: '',
     seo_title: '',
     seo_description: '',
   });
@@ -79,6 +81,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           status: product.status || 'draft',
           featured: product.featured || false,
           sort_order: product.sort_order || 0,
+          hero_image: product.hero_image || '',
+          hover_image: product.hover_image || '',
           seo_title: product.seo_title || '',
           seo_description: product.seo_description || '',
         });
@@ -132,7 +136,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       const productData = {
         ...formData,
         price: formData.price ? parseFloat(formData.price) : null,
-        hero_image: heroImg?.image_url || productImages[0]?.image_url || '',
+        hero_image: heroImg?.image_url || productImages[0]?.image_url || formData.hero_image,
+        hover_image: formData.hover_image,
       };
 
       await updateProduct(id, productData);
@@ -493,6 +498,42 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
                 />
+              </div>
+            </div>
+
+            {/* Quick Image URLs */}
+            <div className="bg-white border border-gray-200 p-6 space-y-4">
+              <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
+                Quick Image URLs
+              </h2>
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Hero Image URL
+                </label>
+                <input
+                  type="url"
+                  name="hero_image"
+                  value={formData.hero_image}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Hover Image URL
+                </label>
+                <input
+                  type="url"
+                  name="hover_image"
+                  value={formData.hover_image}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                  placeholder="https://..."
+                />
+                <p className="text-[12px] text-gray-500 mt-1">
+                  Shown on hover in product cards
+                </p>
               </div>
             </div>
 

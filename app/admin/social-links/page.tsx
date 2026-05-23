@@ -191,24 +191,46 @@ export default function AdminSocialLinksPage() {
         <h3 className="text-[13px] font-medium text-black mb-4">Preview</h3>
         <div className="flex gap-3">
           {settings.social_instagram && (
-            <div className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center">
+            <a
+              href={`https://instagram.com/${settings.social_instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:border-[#013220] hover:text-[#013220] transition-colors"
+              title="Open Instagram"
+            >
               <Instagram className="w-4 h-4" />
-            </div>
+            </a>
           )}
           {settings.social_facebook && (
-            <div className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center">
+            <a
+              href={`https://facebook.com/${settings.social_facebook}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:border-[#013220] hover:text-[#013220] transition-colors"
+              title="Open Facebook"
+            >
               <Facebook className="w-4 h-4" />
-            </div>
+            </a>
           )}
           {settings.social_tiktok && (
-            <div className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center">
+            <a
+              href={`https://tiktok.com/@${settings.social_tiktok}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:border-[#013220] hover:text-[#013220] transition-colors"
+              title="Open TikTok"
+            >
               <Music2 className="w-4 h-4" />
-            </div>
+            </a>
           )}
           {settings.contact_email && (
-            <div className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center">
+            <a
+              href={`mailto:${settings.contact_email}`}
+              className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:border-[#013220] hover:text-[#013220] transition-colors"
+              title="Send email"
+            >
               <Mail className="w-4 h-4" />
-            </div>
+            </a>
           )}
         </div>
       </div>

@@ -10,6 +10,7 @@ export type Product = {
   price?: number;
   priceVisibility: 'visible' | 'inquiry' | 'coming_soon';
   image: string;
+  hoverImage?: string;
   href: string;
   category?: string;
   description?: string;

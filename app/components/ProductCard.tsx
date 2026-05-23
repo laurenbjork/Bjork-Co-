@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/app/types';
+import { cn } from '@/app/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -39,12 +40,25 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Link href={product.href} className="block group">
       <div className="relative aspect-[3/4] mb-4 bg-gray-100 overflow-hidden">
         {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          <>
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              className={cn(
+                "object-cover transition-opacity duration-300",
+                product.hoverImage ? "group-hover:opacity-0" : "transition-transform duration-500 group-hover:scale-105"
+              )}
+            />
+            {product.hoverImage && (
+              <Image
+                src={product.hoverImage}
+                alt={`${product.name} (hover)`}
+                fill
+                className="object-cover absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              />
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100 border border-gray-200">
             <div className="text-center">

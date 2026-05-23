@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Globe, Mail, Phone, MapPin, Instagram, Facebook } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
 export default function AdminSettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [settings, setSettings] = useState({
     siteName: 'BJÖRK & CO.',
@@ -20,16 +21,70 @@ export default function AdminSettingsPage() {
     seoDescription: 'Handcrafted fine jewelry, engagement rings, and custom designs for life\'s precious moments.',
   });
 
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const response = await fetch('/api/site-settings');
+      if (response.ok) {
+        const data = await response.json();
+        setSettings({
+          siteName: data.site_name || settings.siteName,
+          tagline: data.tagline || settings.tagline,
+          description: data.description || settings.description,
+          email: data.email || settings.email,
+          phone: data.phone || settings.phone,
+          address: data.address || settings.address,
+          instagram: data.instagram || settings.instagram,
+          facebook: data.facebook || settings.facebook,
+          seoTitle: data.seo_title || settings.seoTitle,
+          seoDescription: data.seo_description || settings.seoDescription,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSaving(true);
     
-    // TODO: Save to Supabase site_settings table
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    setSaved(true);
-    setIsLoading(false);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      const response = await fetch('/api/site-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          site_name: settings.siteName,
+          tagline: settings.tagline,
+          description: settings.description,
+          email: settings.email,
+          phone: settings.phone,
+          address: settings.address,
+          instagram: settings.instagram,
+          facebook: settings.facebook,
+          seo_title: settings.seoTitle,
+          seo_description: settings.seoDescription,
+        }),
+      });
+
+      if (response.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        const error = await response.json();
+        alert(`Failed to save: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -48,14 +103,14 @@ export default function AdminSettingsPage() {
         </div>
         <button
           onClick={handleSubmit}
-          disabled={isLoading}
+          disabled={isSaving}
           className={cn(
             'flex items-center gap-2 px-4 py-3 bg-[#013220] text-white text-[13px] font-medium tracking-[0.05em] transition-colors',
-            isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-black'
+            isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:bg-black'
           )}
         >
           <Save className="w-4 h-4" />
-          {isLoading ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
+          {isSaving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
         </button>
       </div>
 

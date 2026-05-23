@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { getAllBlogPosts } from '@/app/lib/supabase-queries';
-import { createBlogPost, updateBlogPost } from '@/app/lib/supabase-admin';
+import { updateBlogPost } from '@/app/lib/supabase-admin';
 import { Plus, Edit2, Trash2, Eye, X, Save } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 
@@ -10,9 +11,7 @@ export default function AdminBlogPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPost, setEditingPost] = useState<any>(null);
-  const [creating, setCreating] = useState(false);
   const [editForm, setEditForm] = useState({ title: '', slug: '', content: '', excerpt: '', category: '', status: 'draft', featured_image: '' });
-  const [createForm, setCreateForm] = useState({ title: '', slug: '', content: '', excerpt: '', category: '', status: 'draft', featured_image: '' });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -39,16 +38,13 @@ export default function AdminBlogPage() {
             Manage blog content ({posts.length} posts)
           </p>
         </div>
-        <button
-          onClick={() => {
-            setCreating(true);
-            setCreateForm({ title: '', slug: '', content: '', excerpt: '', category: '', status: 'draft', featured_image: '' });
-          }}
+        <Link
+          href="/admin/blog/new"
           className="flex items-center gap-2 px-4 py-3 bg-[#013220] text-white text-[13px] font-medium tracking-[0.05em] hover:bg-black transition-colors"
         >
           <Plus className="w-4 h-4" />
           Write Post
-        </button>
+        </Link>
       </div>
 
       {loading ? (
@@ -131,54 +127,14 @@ export default function AdminBlogPage() {
           {posts.length === 0 && (
             <div className="p-8 text-center">
               <p className="text-gray-500 text-[14px]">No blog posts found.</p>
-              <button
-                onClick={() => {
-                  setCreating(true);
-                  setCreateForm({ title: '', slug: '', content: '', excerpt: '', category: '', status: 'draft', featured_image: '' });
-                }}
+              <Link
+                href="/admin/blog/new"
                 className="inline-block mt-4 text-[#013220] hover:underline text-[14px]"
               >
                 Write your first post
-              </button>
+              </Link>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Create Modal */}
-      {creating && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h2 className="font-serif text-[20px] text-black">Write Post</h2>
-              <button onClick={() => setCreating(false)} className="p-2 text-gray-400 hover:text-black transition-colors"><X className="w-5 h-5" /></button>
-            </div>
-            <div className="space-y-4">
-              <div><label className="block text-[13px] font-medium text-black mb-2">Title *</label><input type="text" value={createForm.title} onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })} className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]" /></div>
-              <div><label className="block text-[13px] font-medium text-black mb-2">Slug *</label><input type="text" value={createForm.slug} onChange={(e) => setCreateForm({ ...createForm, slug: e.target.value })} className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]" /></div>
-              <div><label className="block text-[13px] font-medium text-black mb-2">Excerpt</label><textarea value={createForm.excerpt} onChange={(e) => setCreateForm({ ...createForm, excerpt: e.target.value })} rows={2} className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]" /></div>
-              <div><label className="block text-[13px] font-medium text-black mb-2">Content</label><textarea value={createForm.content} onChange={(e) => setCreateForm({ ...createForm, content: e.target.value })} rows={6} className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]" /></div>
-              <div><label className="block text-[13px] font-medium text-black mb-2">Category</label><input type="text" value={createForm.category} onChange={(e) => setCreateForm({ ...createForm, category: e.target.value })} className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]" /></div>
-              <div><label className="block text-[13px] font-medium text-black mb-2">Status</label>
-                <select value={createForm.status} onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })} className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]">
-                  <option value="draft">Draft</option><option value="published">Published</option>
-                </select>
-              </div>
-              <div><label className="block text-[13px] font-medium text-black mb-2">Featured Image URL</label><input type="url" value={createForm.featured_image} onChange={(e) => setCreateForm({ ...createForm, featured_image: e.target.value })} className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]" /></div>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setCreating(false)} className="flex-1 py-3 border border-gray-300 text-[13px] font-medium tracking-[0.05em] hover:bg-gray-50 transition-colors">Cancel</button>
-              <button
-                onClick={async () => {
-                  if (!createForm.title || !createForm.slug) { alert('Title and slug are required'); return; }
-                  setIsSaving(true);
-                  try { await createBlogPost(createForm); setCreating(false); loadPosts(); } catch (err) { console.error(err); alert('Failed to create post'); } finally { setIsSaving(false); }
-                }}
-                disabled={isSaving}
-                className={cn('flex-1 py-3 bg-[#013220] text-white text-[13px] font-medium tracking-[0.05em] flex items-center justify-center gap-2', isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:bg-black transition-colors')}
-              ><Save className="w-4 h-4" />{isSaving ? 'Creating...' : 'Create Post'}</button>
-            </div>
-          </div>
         </div>
       )}
 

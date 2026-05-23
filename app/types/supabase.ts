@@ -11,6 +11,7 @@ export interface SupabaseProduct {
   availability_note: string | null;
   cta_type: 'inquire' | 'request_details' | 'book_appointment';
   hero_image: string | null;
+  hover_image: string | null;
   gallery_images: string[] | null;
   video_url: string | null;
   status: 'draft' | 'published' | 'archived';
@@ -79,6 +80,7 @@ export function convertSupabaseProduct(product: SupabaseProduct) {
     availabilityNote: product.availability_note || '',
     ctaType: product.cta_type,
     heroImage: product.hero_image || '/images/placeholder.jpg',
+    hoverImage: product.hover_image ?? undefined,
     galleryImages: product.gallery_images || [],
     videoUrl: product.video_url ?? undefined,
     status: product.status,

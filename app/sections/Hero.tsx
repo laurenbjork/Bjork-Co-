@@ -1,4 +1,15 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+
+interface HeroSlide {
+  title: string;
+  subtitle: string;
+  button_text: string;
+  button_link: string;
+  image?: string;
+}
 
 interface HeroSettings {
   hero_image: string | null;
@@ -9,6 +20,8 @@ interface HeroSettings {
   hero_cta_text: string;
   hero_cta_color: string;
   hero_cta_link: string;
+  use_slider: boolean;
+  slides: HeroSlide[];
 }
 
 async function getHeroSettings(): Promise<HeroSettings> {
@@ -21,12 +34,27 @@ async function getHeroSettings(): Promise<HeroSettings> {
     hero_cta_text: 'Shop Now',
     hero_cta_color: '#013220',
     hero_cta_link: '/shop',
+    use_slider: false,
+    slides: [
+      {
+        title: 'Timeless Elegance',
+        subtitle: 'Handcrafted fine jewelry for life\'s precious moments',
+        button_text: 'Shop Collection',
+        button_link: '/shop',
+      },
+      {
+        title: 'Custom Design',
+        subtitle: 'Create something uniquely yours',
+        button_text: 'Start Your Design',
+        button_link: '/custom',
+      },
+    ],
   };
 
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const keys = ['hero_image', 'hero_title', 'hero_title_font', 'hero_title_size', 'hero_title_color', 'hero_cta_text', 'hero_cta_color', 'hero_cta_link'];
+    const keys = ['hero_image', 'hero_title', 'hero_title_font', 'hero_title_size', 'hero_title_color', 'hero_cta_text', 'hero_cta_color', 'hero_cta_link', 'use_slider', 'hero_slides'];
     const filter = keys.map(k => `key.eq.${k}`).join(',');
     const res = await fetch(
       `${supabaseUrl}/rest/v1/site_settings?select=key,value&or=(${filter})`,
@@ -38,6 +66,16 @@ async function getHeroSettings(): Promise<HeroSettings> {
     if (!res.ok) return defaults;
     const rows: { key: string; value: string }[] = await res.json();
     const map = rows.reduce((acc, r) => { acc[r.key] = r.value; return acc; }, {} as Record<string, string>);
+    
+    let slides = defaults.slides;
+    if (map.hero_slides) {
+      try {
+        slides = JSON.parse(map.hero_slides);
+      } catch {
+        slides = defaults.slides;
+      }
+    }
+
     return {
       hero_image: map.hero_image || null,
       hero_title: map.hero_title || defaults.hero_title,
@@ -47,14 +85,23 @@ async function getHeroSettings(): Promise<HeroSettings> {
       hero_cta_text: map.hero_cta_text || defaults.hero_cta_text,
       hero_cta_color: map.hero_cta_color || defaults.hero_cta_color,
       hero_cta_link: map.hero_cta_link || defaults.hero_cta_link,
+      use_slider: map.use_slider === 'true',
+      slides,
     };
   } catch {
     return defaults;
   }
 }
 
-export default async function Hero() {
-  const settings = await getHeroSettings();
+export default function Hero() {
+  const [settings, setSettings] = useState<HeroSettings | null>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    getHeroSettings().then(setSettings);
+  }, []);
+
+  if (!settings) return null;
 
   const fontFamily =
     settings.hero_title_font === 'sans-serif' ? 'sans-serif' :
@@ -72,6 +119,67 @@ export default async function Hero() {
     color: '#ffffff',
   };
 
+  // Auto-advance slides
+  useEffect(() => {
+    if (!settings.use_slider || settings.slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % settings.slides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [settings.use_slider, settings.slides.length]);
+
+  if (settings.use_slider && settings.slides.length > 0) {
+    const slide = settings.slides[currentSlide];
+    return (
+      <section className="relative w-full">
+        <div className="relative w-full h-[60vh] sm:h-[70vh] lg:h-[85vh] overflow-hidden">
+          {slide.image ? (
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+          )}
+          <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center text-center px-4">
+            <h1
+              className="mb-4 drop-shadow-lg"
+              style={titleStyle}
+            >
+              {slide.title}
+            </h1>
+            <p className="text-white text-lg mb-8 drop-shadow-md max-w-2xl">
+              {slide.subtitle}
+            </p>
+            <Link
+              href={slide.button_link}
+              className="inline-block text-[13px] font-medium tracking-[0.1em] uppercase px-8 py-3 transition-colors hover:opacity-90"
+              style={ctaStyle}
+            >
+              {slide.button_text}
+            </Link>
+          </div>
+          {/* Slide indicators */}
+          {settings.slides.length > 1 && (
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
+              {settings.slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentSlide ? 'bg-white' : 'bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // Single hero image mode (fallback)
   return (
     <section className="relative w-full">
       {settings.hero_image ? (

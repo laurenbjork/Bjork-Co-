@@ -40,6 +40,25 @@ export default function AdminInquiriesPage() {
     }
   };
 
+  const handleMarkResponded = async (id: string) => {
+    try {
+      const response = await fetch(`/api/form-submissions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'responded' }),
+      });
+
+      if (response.ok) {
+        loadSubmissions();
+      } else {
+        alert('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -233,7 +252,10 @@ export default function AdminInquiriesPage() {
               </div>
 
               <div className="pt-4 border-t border-gray-200">
-                <button className="flex items-center gap-2 w-full justify-center px-4 py-3 bg-[#013220] text-white text-[13px] font-medium hover:bg-black transition-colors">
+                <button 
+                  onClick={() => handleMarkResponded(selectedSubmission.id)}
+                  className="flex items-center gap-2 w-full justify-center px-4 py-3 bg-[#013220] text-white text-[13px] font-medium hover:bg-black transition-colors"
+                >
                   <CheckCircle className="w-4 h-4" />
                   Mark as Responded
                 </button>

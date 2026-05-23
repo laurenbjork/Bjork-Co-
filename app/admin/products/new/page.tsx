@@ -26,6 +26,7 @@ export default function NewProductPage() {
     featured: false,
     sort_order: 0,
     hero_image: '',
+    hover_image: '',
     seo_title: '',
     seo_description: '',
   });
@@ -408,22 +409,39 @@ export default function NewProductPage() {
             {/* Image */}
             <div className="bg-white border border-gray-200 p-6 space-y-4">
               <h2 className="font-serif text-[18px] text-black border-b border-gray-200 pb-3">
-                Hero Image
+                Product Images
               </h2>
               <div>
                 <label className="block text-[13px] font-medium text-black mb-2">
-                  Image URL
+                  Hero Image (Primary) *
                 </label>
                 <input
                   type="url"
                   name="hero_image"
                   value={formData.hero_image}
                   onChange={handleChange}
+                  required
                   className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
                   placeholder="https://..."
                 />
                 <p className="text-[12px] text-gray-500 mt-1">
                   Upload to Storage first, then paste URL
+                </p>
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Hover Image (Secondary - Optional)
+                </label>
+                <input
+                  type="url"
+                  name="hover_image"
+                  value={formData.hover_image}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                  placeholder="https://..."
+                />
+                <p className="text-[12px] text-gray-500 mt-1">
+                  This image will show on hover in product cards
                 </p>
               </div>
             </div>

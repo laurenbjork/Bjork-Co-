@@ -1,9 +1,55 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getAllProducts } from '@/app/lib/supabase-queries';
 import { Plus, Edit2, Trash2, Eye } from 'lucide-react';
 
-export default async function AdminProductsPage() {
-  const products = await getAllProducts();
+export default function AdminProductsPage() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const data = await getAllProducts();
+      setProducts(data);
+    } catch (err) {
+      console.error('Error loading products:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) return;
+
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        loadProducts();
+      } else {
+        alert('Failed to delete product');
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Failed to delete product');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -114,6 +160,7 @@ export default async function AdminProductsPage() {
                       <Edit2 className="w-4 h-4" />
                     </Link>
                     <button
+                      onClick={() => handleDelete(product.id)}
                       className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                       title="Delete"
                     >

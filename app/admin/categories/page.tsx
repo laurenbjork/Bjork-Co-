@@ -10,10 +10,10 @@ export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingCategory, setEditingCategory] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ name: '', slug: '', description: '', sort_order: 0 });
+  const [editForm, setEditForm] = useState<any>({ name: '', slug: '', description: '', image: '', sort_order: 0 });
   const [isSaving, setIsSaving] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: '', slug: '', description: '', sort_order: 0 });
+  const [createForm, setCreateForm] = useState<any>({ name: '', slug: '', description: '', image: '', sort_order: 0 });
 
   // Load categories on mount
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function AdminCategoriesPage() {
         <button
           onClick={() => {
             setCreating(true);
-            setCreateForm({ name: '', slug: '', description: '', sort_order: 0 });
+            setCreateForm({ name: '', slug: '', description: '', image: '', sort_order: 0 });
           }}
           className="flex items-center gap-2 px-4 py-3 bg-[#013220] text-white text-[13px] font-medium tracking-[0.05em] hover:bg-black transition-colors"
         >
@@ -114,6 +114,7 @@ export default function AdminCategoriesPage() {
                             name: category.name || '',
                             slug: category.slug || '',
                             description: category.description || '',
+                            image: category.image || '',
                             sort_order: category.sort_order || 0,
                           });
                         }}
@@ -190,6 +191,22 @@ export default function AdminCategoriesPage() {
                   rows={3}
                   className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Cover Image URL
+                </label>
+                <input
+                  type="url"
+                  value={createForm.image}
+                  onChange={(e) => setCreateForm({ ...createForm, image: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                  placeholder="https://..."
+                />
+                <p className="text-[12px] text-gray-500 mt-1">
+                  Used in navigation and category pages
+                </p>
               </div>
 
               <div>
@@ -293,6 +310,22 @@ export default function AdminCategoriesPage() {
                   rows={3}
                   className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-medium text-black mb-2">
+                  Cover Image URL
+                </label>
+                <input
+                  type="url"
+                  value={editForm.image}
+                  onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                  placeholder="https://..."
+                />
+                <p className="text-[12px] text-gray-500 mt-1">
+                  Used in navigation and category pages
+                </p>
               </div>
 
               <div>

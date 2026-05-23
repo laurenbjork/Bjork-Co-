@@ -22,6 +22,11 @@ export default function AdminHomepagePage() {
   const [heroCtaText, setHeroCtaText] = useState('Shop Now');
   const [heroCtaColor, setHeroCtaColor] = useState('#013220');
   const [heroCtaLink, setHeroCtaLink] = useState('/shop');
+  const [useSlider, setUseSlider] = useState(false);
+  const [heroSlides, setHeroSlides] = useState([
+    { title: 'Timeless Elegance', subtitle: 'Handcrafted fine jewelry for life\'s precious moments', button_text: 'Shop Collection', button_link: '/shop', image: '' },
+    { title: 'Custom Design', subtitle: 'Create something uniquely yours', button_text: 'Start Your Design', button_link: '/custom', image: '' },
+  ]);
 
   useEffect(() => {
     loadStats();
@@ -56,6 +61,14 @@ export default function AdminHomepagePage() {
         if (s.hero_cta_text) setHeroCtaText(s.hero_cta_text);
         if (s.hero_cta_color) setHeroCtaColor(s.hero_cta_color);
         if (s.hero_cta_link) setHeroCtaLink(s.hero_cta_link);
+        if (s.use_slider !== undefined) setUseSlider(s.use_slider);
+        if (s.hero_slides) {
+          try {
+            setHeroSlides(JSON.parse(s.hero_slides));
+          } catch {
+            console.error('Failed to parse hero slides');
+          }
+        }
       }
     } catch (err) {
       console.error('Error loading settings:', err);
@@ -134,16 +147,32 @@ export default function AdminHomepagePage() {
           hero_cta_text: heroCtaText,
           hero_cta_color: heroCtaColor,
           hero_cta_link: heroCtaLink,
+          use_slider: useSlider,
+          hero_slides: JSON.stringify(heroSlides),
         }),
       });
       if (!res.ok) throw new Error('Failed to save');
-      alert('Hero text saved!');
+      alert('Hero settings saved!');
     } catch (err) {
       console.error('Error saving hero text:', err);
-      alert('Failed to save hero text');
+      alert('Failed to save hero settings');
     } finally {
       setSavingText(false);
     }
+  };
+
+  const updateSlide = (index: number, field: string, value: string) => {
+    const newSlides = [...heroSlides];
+    newSlides[index] = { ...newSlides[index], [field]: value };
+    setHeroSlides(newSlides);
+  };
+
+  const addSlide = () => {
+    setHeroSlides([...heroSlides, { title: '', subtitle: '', button_text: '', button_link: '', image: '' }]);
+  };
+
+  const removeSlide = (index: number) => {
+    setHeroSlides(heroSlides.filter((_, i) => i !== index));
   };
 
   if (loading) {
@@ -228,6 +257,20 @@ export default function AdminHomepagePage() {
           <Type className="w-5 h-5 text-[#013220]" />
           Hero Text & CTA
         </h2>
+
+        {/* Slider Toggle */}
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="useSlider"
+            checked={useSlider}
+            onChange={e => setUseSlider(e.target.checked)}
+            className="w-4 h-4 border-gray-300 rounded focus:ring-[#013220]"
+          />
+          <label htmlFor="useSlider" className="text-[14px] text-black">
+            Use Slide Showcase (multiple slides with auto-rotation)
+          </label>
+        </div>
 
         {/* Live Preview */}
         <div
@@ -344,6 +387,84 @@ export default function AdminHomepagePage() {
             </div>
           </div>
         </div>
+
+        {/* Slides Configuration */}
+        {useSlider && (
+          <div className="space-y-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[16px] font-medium text-black">Slides Configuration</h3>
+              <button
+                onClick={addSlide}
+                className="text-[13px] text-[#013220] hover:underline"
+              >
+                + Add Slide
+              </button>
+            </div>
+            {heroSlides.map((slide, index) => (
+              <div key={index} className="bg-gray-50 p-4 space-y-3 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-medium text-gray-700">Slide {index + 1}</span>
+                  {heroSlides.length > 1 && (
+                    <button
+                      onClick={() => removeSlide(index)}
+                      className="text-red-600 text-[12px] hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-gray-600 uppercase">Title</label>
+                    <input
+                      type="text"
+                      value={slide.title}
+                      onChange={e => updateSlide(index, 'title', e.target.value)}
+                      className="w-full border border-gray-200 px-3 py-2 text-[13px] focus:outline-none focus:border-[#013220]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-gray-600 uppercase">Button Text</label>
+                    <input
+                      type="text"
+                      value={slide.button_text}
+                      onChange={e => updateSlide(index, 'button_text', e.target.value)}
+                      className="w-full border border-gray-200 px-3 py-2 text-[13px] focus:outline-none focus:border-[#013220]"
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-[11px] font-medium text-gray-600 uppercase">Subtitle</label>
+                    <input
+                      type="text"
+                      value={slide.subtitle}
+                      onChange={e => updateSlide(index, 'subtitle', e.target.value)}
+                      className="w-full border border-gray-200 px-3 py-2 text-[13px] focus:outline-none focus:border-[#013220]"
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-[11px] font-medium text-gray-600 uppercase">Button Link</label>
+                    <input
+                      type="text"
+                      value={slide.button_link}
+                      onChange={e => updateSlide(index, 'button_link', e.target.value)}
+                      className="w-full border border-gray-200 px-3 py-2 text-[13px] focus:outline-none focus:border-[#013220]"
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-[11px] font-medium text-gray-600 uppercase">Image URL (optional)</label>
+                    <input
+                      type="url"
+                      value={slide.image}
+                      onChange={e => updateSlide(index, 'image', e.target.value)}
+                      className="w-full border border-gray-200 px-3 py-2 text-[13px] focus:outline-none focus:border-[#013220]"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <button
           onClick={handleSaveHeroText}

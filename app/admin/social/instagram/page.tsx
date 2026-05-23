@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Instagram, Plus, Trash2, GripVertical } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Instagram, Plus, Trash2, GripVertical, Upload, X } from 'lucide-react';
 
 interface InstagramPost {
   id: string;
@@ -16,6 +16,8 @@ export default function AdminInstagramPage() {
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     image_url: '',
     caption: '',
@@ -37,6 +39,35 @@ export default function AdminInstagramPage() {
       console.error('Error loading posts:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+
+      const res = await fetch('/api/upload-instagram', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || 'Upload failed');
+      }
+
+      const { url } = await res.json();
+      setFormData({ ...formData, image_url: url });
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      alert('Failed to upload image');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -126,65 +157,56 @@ export default function AdminInstagramPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[13px] font-medium text-black mb-2">
-                Image URL *
+                Image *
               </label>
-              <input
-                type="url"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
-                placeholder="https://..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-medium text-black mb-2">
-                Caption (optional)
-              </label>
-              <textarea
-                value={formData.caption}
-                onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
-                placeholder="Post caption..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-medium text-black mb-2">
-                Link to Post (optional)
-              </label>
-              <input
-                type="url"
-                value={formData.link}
-                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
-                placeholder="https://instagram.com/p/..."
-              />
+              <div className="space-y-3">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="w-full px-4 py-3 border border-gray-300 text-[14px] focus:outline-none focus:border-[#013220]"
+                />
+                {isUploading && (
+                  <p className="text-[13px] text-gray-500">Uploading...</p>
+                )}
+              </div>
             </div>
 
             {formData.image_url && (
               <div className="pt-2">
                 <label className="block text-[13px] font-medium text-black mb-2">Preview</label>
-                <img
-                  src={formData.image_url}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded"
-                />
+                <div className="relative inline-block">
+                  <img
+                    src={formData.image_url}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, image_url: '' })}
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             )}
 
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                className="px-6 py-3 bg-[#013220] text-white text-[13px] font-medium hover:bg-black transition-colors"
+                disabled={!formData.image_url || isUploading}
+                className="px-6 py-3 bg-[#013220] text-white text-[13px] font-medium hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add to Feed
               </button>
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setFormData({ image_url: '', caption: '', link: '' });
+                }}
                 className="px-6 py-3 border border-gray-300 text-[13px] font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
