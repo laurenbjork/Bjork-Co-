@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Home, Image, ShoppingBag, Eye, ArrowRight, Upload, X, Save } from 'lucide-react';
 import { getFeaturedProducts, getAllCollections } from '@/app/lib/supabase-queries';
-import { supabase } from '@/app/lib/supabase';
 import Link from 'next/link';
 
 export default function AdminHomepagePage() {
@@ -53,21 +52,21 @@ export default function AdminHomepagePage() {
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `hero-${Date.now()}.${fileExt}`;
-      const filePath = `homepage/${fileName}`;
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
+      const res = await fetch('/api/upload-hero', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (uploadError) throw uploadError;
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || 'Upload failed');
+      }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      setHeroImage(publicUrl);
+      const { url } = await res.json();
+      setHeroImage(url);
     } catch (err) {
       console.error('Error uploading image:', err);
       alert('Failed to upload image');

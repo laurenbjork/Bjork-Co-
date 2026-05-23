@@ -1,17 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/app/lib/supabase';
-import { createClient } from '@supabase/supabase-js';
-
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  console.log('[site-settings] serviceKey present:', !!serviceKey);
-  if (!serviceKey) {
-    console.warn('[site-settings] SUPABASE_SERVICE_ROLE_KEY not set, falling back to anon client');
-    return supabase;
-  }
-  return createClient(url, serviceKey, { auth: { persistSession: false } });
-}
+import { supabaseServer } from '@/app/lib/supabase-server';
 
 // GET all site settings
 export async function GET() {
@@ -51,24 +40,17 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const updates = [];
 
-    const admin = getAdminClient();
-
     for (const [key, value] of Object.entries(body)) {
       if (typeof value === 'string') {
         updates.push(
-          admin
+          supabaseServer
             .from('site_settings')
             .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
         );
       }
     }
 
-    const results = await Promise.all(updates);
-    const failed = results.find((r) => r.error);
-    if (failed?.error) {
-      console.error('[site-settings] Upsert error:', JSON.stringify(failed.error));
-      throw failed.error;
-    }
+    await Promise.all(updates);
 
     return NextResponse.json({ success: true });
   } catch (error) {
