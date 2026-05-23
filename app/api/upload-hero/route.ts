@@ -15,6 +15,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing Supabase auth key' }, { status: 500 });
     }
 
+    console.log('[upload-hero] URL:', supabaseUrl);
+    console.log('[upload-hero] Using service role key:', !!serviceRoleKey);
+    console.log('[upload-hero] Key prefix:', authKey.substring(0, 20));
+    console.log('[upload-hero] Key suffix:', authKey.substring(authKey.length - 10));
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 
