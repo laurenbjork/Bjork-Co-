@@ -8,6 +8,7 @@ import ProductGallery from '@/app/components/ProductGallery';
 import ProductInfo from '@/app/components/ProductInfo';
 import RelatedProducts from '@/app/components/RelatedProducts';
 import { getProductBySlug, getAllProducts, getFeaturedProducts } from '@/app/lib/supabase-queries';
+import { getProductImages } from '@/app/lib/supabase-admin';
 import { convertSupabaseProduct } from '@/app/types/supabase';
 
 export async function generateStaticParams() {
@@ -41,13 +42,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
-  const supabaseProduct = await getProductBySlug(slug);
+  const decodedSlug = decodeURIComponent(slug).replace(/ /g, '-');
+  const supabaseProduct = await getProductBySlug(decodedSlug);
 
   if (!supabaseProduct) {
     notFound();
   }
 
   const product = convertSupabaseProduct(supabaseProduct);
+
+  // Fetch images from product_images table
+  const productImages = await getProductImages(supabaseProduct.id);
+  const imageUrls = productImages.map((img: any) => img.image_url).filter(Boolean);
+  const galleryImages = imageUrls.length > 0 ? imageUrls : (supabaseProduct.hero_image ? [supabaseProduct.hero_image] : []);
 
   // Get featured products as related (since we don't have related products table yet)
   const relatedSupabaseProducts = await getFeaturedProducts(4);
@@ -70,7 +77,7 @@ export default async function ProductPage({ params }: Props) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 py-8 sm:py-12">
             {/* Product Gallery */}
-            <ProductGallery productName={product.name} />
+            <ProductGallery images={galleryImages} productName={product.name} />
 
             {/* Product Info */}
             <ProductInfo product={product} />
