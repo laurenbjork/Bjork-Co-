@@ -21,6 +21,7 @@ export default function AdminHomepagePage() {
   const [heroTitleColor, setHeroTitleColor] = useState('#ffffff');
   const [heroCtaText, setHeroCtaText] = useState('Shop Now');
   const [heroCtaColor, setHeroCtaColor] = useState('#013220');
+  const [heroCtaLink, setHeroCtaLink] = useState('/shop');
 
   useEffect(() => {
     loadStats();
@@ -54,6 +55,7 @@ export default function AdminHomepagePage() {
         if (s.hero_title_color) setHeroTitleColor(s.hero_title_color);
         if (s.hero_cta_text) setHeroCtaText(s.hero_cta_text);
         if (s.hero_cta_color) setHeroCtaColor(s.hero_cta_color);
+        if (s.hero_cta_link) setHeroCtaLink(s.hero_cta_link);
       }
     } catch (err) {
       console.error('Error loading settings:', err);
@@ -131,6 +133,7 @@ export default function AdminHomepagePage() {
           hero_title_color: heroTitleColor,
           hero_cta_text: heroCtaText,
           hero_cta_color: heroCtaColor,
+          hero_cta_link: heroCtaLink,
         }),
       });
       if (!res.ok) throw new Error('Failed to save');
@@ -312,6 +315,18 @@ export default function AdminHomepagePage() {
               onChange={e => setHeroCtaText(e.target.value)}
               className="w-full border border-gray-200 px-3 py-2 text-[14px] focus:outline-none focus:border-[#013220]"
               placeholder="Shop Now"
+            />
+          </div>
+
+          {/* CTA Link */}
+          <div className="space-y-1">
+            <label className="text-[12px] font-medium text-gray-700 uppercase tracking-wide">CTA Button Link</label>
+            <input
+              type="text"
+              value={heroCtaLink}
+              onChange={e => setHeroCtaLink(e.target.value)}
+              className="w-full border border-gray-200 px-3 py-2 text-[14px] focus:outline-none focus:border-[#013220]"
+              placeholder="/shop"
             />
           </div>
 

@@ -8,6 +8,7 @@ interface HeroSettings {
   hero_title_color: string;
   hero_cta_text: string;
   hero_cta_color: string;
+  hero_cta_link: string;
 }
 
 async function getHeroSettings(): Promise<HeroSettings> {
@@ -19,12 +20,13 @@ async function getHeroSettings(): Promise<HeroSettings> {
     hero_title_color: '#ffffff',
     hero_cta_text: 'Shop Now',
     hero_cta_color: '#013220',
+    hero_cta_link: '/shop',
   };
 
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const keys = ['hero_image', 'hero_title', 'hero_title_font', 'hero_title_size', 'hero_title_color', 'hero_cta_text', 'hero_cta_color'];
+    const keys = ['hero_image', 'hero_title', 'hero_title_font', 'hero_title_size', 'hero_title_color', 'hero_cta_text', 'hero_cta_color', 'hero_cta_link'];
     const filter = keys.map(k => `key.eq.${k}`).join(',');
     const res = await fetch(
       `${supabaseUrl}/rest/v1/site_settings?select=key,value&or=(${filter})`,
@@ -44,6 +46,7 @@ async function getHeroSettings(): Promise<HeroSettings> {
       hero_title_color: map.hero_title_color || defaults.hero_title_color,
       hero_cta_text: map.hero_cta_text || defaults.hero_cta_text,
       hero_cta_color: map.hero_cta_color || defaults.hero_cta_color,
+      hero_cta_link: map.hero_cta_link || defaults.hero_cta_link,
     };
   } catch {
     return defaults;
@@ -86,7 +89,7 @@ export default async function Hero() {
               {settings.hero_title}
             </h1>
             <Link
-              href="/shop"
+              href={settings.hero_cta_link}
               className="inline-block text-[13px] font-medium tracking-[0.1em] uppercase px-8 py-3 transition-colors hover:opacity-90"
               style={ctaStyle}
             >
@@ -104,7 +107,7 @@ export default async function Hero() {
               {settings.hero_title}
             </h2>
             <Link
-              href="/shop"
+              href={settings.hero_cta_link}
               className="inline-block text-[13px] font-medium tracking-[0.1em] uppercase px-8 py-3 transition-colors hover:opacity-90"
               style={ctaStyle}
             >
