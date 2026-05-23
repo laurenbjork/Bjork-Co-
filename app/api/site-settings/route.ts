@@ -49,7 +49,13 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    await Promise.all(updates);
+    const results = await Promise.all(updates);
+    for (const result of results) {
+      if (result.error) {
+        console.error('[site-settings PUT] upsert error:', JSON.stringify(result.error));
+        return NextResponse.json({ error: result.error.message, details: result.error }, { status: 500 });
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

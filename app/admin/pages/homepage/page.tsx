@@ -68,11 +68,16 @@ export default function AdminHomepagePage() {
       const { url } = await res.json();
       setHeroImage(url);
 
-      await fetch('/api/site-settings', {
+      const saveRes = await fetch('/api/site-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hero_image: url }),
       });
+      if (!saveRes.ok) {
+        const saveErr = await saveRes.json();
+        console.error('Save failed:', saveErr);
+        alert(`Upload succeeded but save failed: ${saveErr.error}\n${JSON.stringify(saveErr.details)}`);
+      }
     } catch (err) {
       console.error('Error uploading image:', err);
       alert('Failed to upload image');
