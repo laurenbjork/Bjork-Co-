@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/app/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl) {
+      return NextResponse.json({ error: 'Missing SUPABASE_URL' }, { status: 500 });
+    }
+
+    const authKey = serviceRoleKey || anonKey;
+    if (!authKey) {
+      return NextResponse.json({ error: 'Missing Supabase auth key' }, { status: 500 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 
@@ -15,23 +27,26 @@ export async function POST(request: NextRequest) {
     const filePath = `homepage/${fileName}`;
 
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
-    const { error: uploadError } = await supabaseServer.storage
-      .from('product-images')
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+    const uploadUrl = `${supabaseUrl}/storage/v1/object/product-images/${filePath}`;
 
-    if (uploadError) {
-      console.error('Storage upload error:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authKey}`,
+        'Content-Type': file.type,
+        'x-upsert': 'false',
+      },
+      body: arrayBuffer,
+    });
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      console.error('Storage upload error:', uploadRes.status, errText);
+      return NextResponse.json({ error: errText }, { status: 500 });
     }
 
-    const { data: { publicUrl } } = supabaseServer.storage
-      .from('product-images')
-      .getPublicUrl(filePath);
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/product-images/${filePath}`;
 
     return NextResponse.json({ url: publicUrl });
   } catch (error) {
