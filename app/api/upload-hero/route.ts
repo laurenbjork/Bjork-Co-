@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/app/lib/supabase-server';
+import { supabase } from '@/app/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { error: uploadError } = await supabaseServer.storage
+    const { error: uploadError } = await supabase.storage
       .from('product-images')
       .upload(filePath, buffer, {
         contentType: file.type,
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
-    const { data: { publicUrl } } = supabaseServer.storage
+    const { data: { publicUrl } } = supabase.storage
       .from('product-images')
       .getPublicUrl(filePath);
 
