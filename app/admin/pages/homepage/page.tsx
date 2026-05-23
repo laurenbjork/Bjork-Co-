@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Home, Image, ShoppingBag, Eye, ArrowRight, Upload, X, Save } from 'lucide-react';
+import { Home, Image, ShoppingBag, Eye, ArrowRight, Upload, X, Save, Type } from 'lucide-react';
 import { getFeaturedProducts, getAllCollections } from '@/app/lib/supabase-queries';
 import Link from 'next/link';
 
@@ -12,11 +12,19 @@ export default function AdminHomepagePage() {
   const [heroImage, setHeroImage] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingText, setSavingText] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [heroTitle, setHeroTitle] = useState('Fine Jewelry');
+  const [heroTitleFont, setHeroTitleFont] = useState('serif');
+  const [heroTitleSize, setHeroTitleSize] = useState('72');
+  const [heroTitleColor, setHeroTitleColor] = useState('#ffffff');
+  const [heroCtaText, setHeroCtaText] = useState('Shop Now');
+  const [heroCtaColor, setHeroCtaColor] = useState('#013220');
 
   useEffect(() => {
     loadStats();
-    loadHeroImage();
+    loadSettings();
   }, []);
 
   const loadStats = async () => {
@@ -34,15 +42,21 @@ export default function AdminHomepagePage() {
     }
   };
 
-  const loadHeroImage = async () => {
+  const loadSettings = async () => {
     try {
       const res = await fetch('/api/site-settings');
       if (res.ok) {
-        const settings = await res.json();
-        if (settings.hero_image) setHeroImage(settings.hero_image);
+        const s = await res.json();
+        if (s.hero_image) setHeroImage(s.hero_image);
+        if (s.hero_title) setHeroTitle(s.hero_title);
+        if (s.hero_title_font) setHeroTitleFont(s.hero_title_font);
+        if (s.hero_title_size) setHeroTitleSize(s.hero_title_size);
+        if (s.hero_title_color) setHeroTitleColor(s.hero_title_color);
+        if (s.hero_cta_text) setHeroCtaText(s.hero_cta_text);
+        if (s.hero_cta_color) setHeroCtaColor(s.hero_cta_color);
       }
     } catch (err) {
-      console.error('Error loading hero image:', err);
+      console.error('Error loading settings:', err);
     }
   };
 
@@ -101,6 +115,31 @@ export default function AdminHomepagePage() {
       alert('Failed to save hero image');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveHeroText = async () => {
+    setSavingText(true);
+    try {
+      const res = await fetch('/api/site-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hero_title: heroTitle,
+          hero_title_font: heroTitleFont,
+          hero_title_size: heroTitleSize,
+          hero_title_color: heroTitleColor,
+          hero_cta_text: heroCtaText,
+          hero_cta_color: heroCtaColor,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      alert('Hero text saved!');
+    } catch (err) {
+      console.error('Error saving hero text:', err);
+      alert('Failed to save hero text');
+    } finally {
+      setSavingText(false);
     }
   };
 
@@ -178,6 +217,127 @@ export default function AdminHomepagePage() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Hero Text Section */}
+      <div className="bg-white border border-gray-200 p-6 space-y-5">
+        <h2 className="font-serif text-[20px] text-black border-b border-gray-200 pb-3 flex items-center gap-2">
+          <Type className="w-5 h-5 text-[#013220]" />
+          Hero Text & CTA
+        </h2>
+
+        {/* Live Preview */}
+        <div
+          className="relative w-full h-28 flex flex-col items-center justify-center text-center rounded overflow-hidden"
+          style={{ background: '#6b7280' }}
+        >
+          <p
+            className="drop-shadow-lg"
+            style={{
+              fontFamily: heroTitleFont === 'sans-serif' ? 'sans-serif' : heroTitleFont === 'monospace' ? 'monospace' : 'Georgia, serif',
+              fontSize: `${Math.min(parseInt(heroTitleSize) || 72, 40)}px`,
+              color: heroTitleColor,
+            }}
+          >
+            {heroTitle || 'Fine Jewelry'}
+          </p>
+          <span
+            className="mt-2 text-[11px] font-medium tracking-widest uppercase px-4 py-1.5"
+            style={{ backgroundColor: heroCtaColor, color: '#fff' }}
+          >
+            {heroCtaText || 'Shop Now'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Title Text */}
+          <div className="space-y-1">
+            <label className="text-[12px] font-medium text-gray-700 uppercase tracking-wide">Title Text</label>
+            <input
+              type="text"
+              value={heroTitle}
+              onChange={e => setHeroTitle(e.target.value)}
+              className="w-full border border-gray-200 px-3 py-2 text-[14px] focus:outline-none focus:border-[#013220]"
+              placeholder="Fine Jewelry"
+            />
+          </div>
+
+          {/* Font */}
+          <div className="space-y-1">
+            <label className="text-[12px] font-medium text-gray-700 uppercase tracking-wide">Font</label>
+            <select
+              value={heroTitleFont}
+              onChange={e => setHeroTitleFont(e.target.value)}
+              className="w-full border border-gray-200 px-3 py-2 text-[14px] focus:outline-none focus:border-[#013220]"
+            >
+              <option value="serif">Serif (Georgia)</option>
+              <option value="sans-serif">Sans-Serif</option>
+              <option value="monospace">Monospace</option>
+            </select>
+          </div>
+
+          {/* Font Size */}
+          <div className="space-y-1">
+            <label className="text-[12px] font-medium text-gray-700 uppercase tracking-wide">Font Size (px)</label>
+            <input
+              type="number"
+              value={heroTitleSize}
+              onChange={e => setHeroTitleSize(e.target.value)}
+              min="16"
+              max="200"
+              className="w-full border border-gray-200 px-3 py-2 text-[14px] focus:outline-none focus:border-[#013220]"
+            />
+          </div>
+
+          {/* Title Color */}
+          <div className="space-y-1">
+            <label className="text-[12px] font-medium text-gray-700 uppercase tracking-wide">Title Color</label>
+            <div className="flex items-center gap-2 border border-gray-200 px-3 py-2">
+              <input
+                type="color"
+                value={heroTitleColor}
+                onChange={e => setHeroTitleColor(e.target.value)}
+                className="w-8 h-6 cursor-pointer border-none bg-transparent"
+              />
+              <span className="text-[13px] text-gray-600 font-mono">{heroTitleColor}</span>
+            </div>
+          </div>
+
+          {/* CTA Text */}
+          <div className="space-y-1">
+            <label className="text-[12px] font-medium text-gray-700 uppercase tracking-wide">CTA Button Text</label>
+            <input
+              type="text"
+              value={heroCtaText}
+              onChange={e => setHeroCtaText(e.target.value)}
+              className="w-full border border-gray-200 px-3 py-2 text-[14px] focus:outline-none focus:border-[#013220]"
+              placeholder="Shop Now"
+            />
+          </div>
+
+          {/* CTA Color */}
+          <div className="space-y-1">
+            <label className="text-[12px] font-medium text-gray-700 uppercase tracking-wide">CTA Button Color</label>
+            <div className="flex items-center gap-2 border border-gray-200 px-3 py-2">
+              <input
+                type="color"
+                value={heroCtaColor}
+                onChange={e => setHeroCtaColor(e.target.value)}
+                className="w-8 h-6 cursor-pointer border-none bg-transparent"
+              />
+              <span className="text-[13px] text-gray-600 font-mono">{heroCtaColor}</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSaveHeroText}
+          disabled={savingText}
+          className="flex items-center gap-2 px-4 py-3 bg-[#013220] text-white text-[13px] font-medium tracking-[0.05em] hover:bg-black transition-colors disabled:opacity-70"
+        >
+          <Save className="w-4 h-4" />
+          {savingText ? 'Saving...' : 'Save Hero Text'}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
