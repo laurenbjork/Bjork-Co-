@@ -1,18 +1,22 @@
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
 
 async function getHeroImage(): Promise<string | null> {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/site_settings?select=value&key=eq.hero_image`,
+      {
+        headers: {
+          'apikey': anonKey,
+          'Authorization': `Bearer ${anonKey}`,
+        },
+        cache: 'no-store',
+      }
     );
-    const { data } = await supabase
-      .from('site_settings')
-      .select('value')
-      .eq('key', 'hero_image')
-      .single();
-    return data?.value || null;
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows?.[0]?.value || null;
   } catch {
     return null;
   }

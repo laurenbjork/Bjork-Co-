@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/app/lib/supabase';
-import { supabaseServer } from '@/app/lib/supabase-server';
 
 // GET all site settings
 export async function GET() {
@@ -43,7 +42,7 @@ export async function PUT(request: NextRequest) {
     for (const [key, value] of Object.entries(body)) {
       if (typeof value === 'string') {
         updates.push(
-          supabaseServer
+          supabase
             .from('site_settings')
             .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
         );
