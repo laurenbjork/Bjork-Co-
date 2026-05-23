@@ -180,6 +180,44 @@ export async function getCollectionBySlug(slug: string) {
   return data;
 }
 
+export async function getProductsByCollection(collectionSlug: string) {
+  const { data: collectionData, error: colError } = await supabase
+    .from('collections')
+    .select('id')
+    .eq('slug', collectionSlug)
+    .single();
+
+  if (colError || !collectionData) {
+    console.error('Collection not found:', collectionSlug, colError);
+    return [];
+  }
+
+  const { data: assignments, error: assignError } = await supabase
+    .from('product_collections')
+    .select('product_id')
+    .eq('collection_id', collectionData.id);
+
+  if (assignError || !assignments || assignments.length === 0) {
+    return [];
+  }
+
+  const productIds = assignments.map((a) => a.product_id);
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .in('id', productIds)
+    .eq('status', 'published')
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching products by collection:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
 // ==========================================
 // BLOG QUERIES
 // ==========================================

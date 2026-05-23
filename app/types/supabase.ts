@@ -92,7 +92,7 @@ export function convertSupabaseProduct(product: SupabaseProduct) {
     updatedAt: product.updated_at,
     // Properties needed by ProductCard
     image: product.hero_image || '/images/placeholder.jpg',
-    href: `/product/${product.slug}`,
+    href: `/shop/${product.slug}`,
   };
 }
 
