@@ -21,7 +21,8 @@ CREATE POLICY "Anyone can upload product images"
 CREATE POLICY "Anyone can update product images"
   ON storage.objects FOR UPDATE
   TO anon, authenticated
-  USING (bucket_id = 'product-images');
+  USING (bucket_id = 'product-images')
+  WITH CHECK (bucket_id = 'product-images');
 
 -- Allow authenticated users to delete objects in product-images bucket
 CREATE POLICY "Authenticated can delete product images"
