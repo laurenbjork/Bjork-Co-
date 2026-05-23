@@ -11,15 +11,13 @@ export default function AdminHomepagePage() {
   const [collectionCount, setCollectionCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [heroImage, setHeroImage] = useState<string>('');
-  const [heroHeading, setHeroHeading] = useState<string>('New Arrivals');
-  const [heroButtonLink, setHeroButtonLink] = useState<string>('/shop');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadStats();
-    loadHeroSettings();
+    loadHeroImage();
   }, []);
 
   const loadStats = async () => {
@@ -37,16 +35,18 @@ export default function AdminHomepagePage() {
     }
   };
 
-  const loadHeroSettings = async () => {
+  const loadHeroImage = async () => {
     try {
-      const res = await fetch('/api/site-settings');
-      if (!res.ok) return;
-      const map = await res.json();
-      if (map['hero_image']) setHeroImage(map['hero_image']);
-      if (map['hero_heading']) setHeroHeading(map['hero_heading']);
-      if (map['hero_button_link']) setHeroButtonLink(map['hero_button_link']);
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'hero_image')
+        .single();
+      if (data && !error) {
+        setHeroImage(data.value);
+      }
     } catch (err) {
-      console.error('Error loading hero settings:', err);
+      console.error('Error loading hero image:', err);
     }
   };
 
@@ -61,13 +61,13 @@ export default function AdminHomepagePage() {
       const filePath = `homepage/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from('product-images')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('images')
+        .from('product-images')
         .getPublicUrl(filePath);
 
       setHeroImage(publicUrl);
@@ -82,14 +82,12 @@ export default function AdminHomepagePage() {
   const handleSaveHero = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/site-settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hero_image: heroImage, hero_heading: heroHeading, hero_button_link: heroButtonLink }),
-      });
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({ key: 'hero_image', value: heroImage }, { onConflict: 'key' });
 
-      if (!res.ok) throw new Error(await res.text());
-      alert('Hero section saved!');
+      if (error) throw error;
+      alert('Hero image saved!');
     } catch (err) {
       console.error('Error saving hero image:', err);
       alert('Failed to save hero image');
@@ -129,29 +127,6 @@ export default function AdminHomepagePage() {
           Upload the main banner image for your homepage. This will be displayed at the top of your site.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-[13px] font-medium text-gray-700">Heading Text</label>
-            <input
-              type="text"
-              value={heroHeading}
-              onChange={(e) => setHeroHeading(e.target.value)}
-              placeholder="New Arrivals"
-              className="w-full border border-gray-300 px-3 py-2 text-[13px] focus:outline-none focus:border-[#013220]"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[13px] font-medium text-gray-700">Button Link</label>
-            <input
-              type="text"
-              value={heroButtonLink}
-              onChange={(e) => setHeroButtonLink(e.target.value)}
-              placeholder="/shop"
-              className="w-full border border-gray-300 px-3 py-2 text-[13px] focus:outline-none focus:border-[#013220]"
-            />
-          </div>
-        </div>
-
         {heroImage && (
           <div className="relative">
             <img
@@ -184,14 +159,16 @@ export default function AdminHomepagePage() {
             <Upload className="w-4 h-4" />
             {uploading ? 'Uploading...' : 'Upload Image'}
           </button>
-          <button
-            onClick={handleSaveHero}
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-[13px] font-medium hover:bg-gray-50 transition-colors disabled:opacity-70"
-          >
-            <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Save Hero Section'}
-          </button>
+          {heroImage && (
+            <button
+              onClick={handleSaveHero}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-[13px] font-medium hover:bg-gray-50 transition-colors disabled:opacity-70"
+            >
+              <Save className="w-4 h-4" />
+              {saving ? 'Saving...' : 'Save Hero Image'}
+            </button>
+          )}
         </div>
       </div>
 
