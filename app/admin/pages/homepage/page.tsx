@@ -67,6 +67,12 @@ export default function AdminHomepagePage() {
 
       const { url } = await res.json();
       setHeroImage(url);
+
+      await fetch('/api/site-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hero_image: url }),
+      });
     } catch (err) {
       console.error('Error uploading image:', err);
       alert('Failed to upload image');
