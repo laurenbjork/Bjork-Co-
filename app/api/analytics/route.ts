@@ -18,6 +18,13 @@ export async function GET(request: NextRequest) {
 
     if (totalError) {
       console.error('Error fetching total views:', totalError);
+      return NextResponse.json({
+        totalViews: 0,
+        uniqueVisitors: 0,
+        topPages: [],
+        dailyViews: [],
+        deviceBreakdown: { desktop: 0, mobile: 0, tablet: 0 },
+      });
     }
 
     // Unique visitors (by session_id)
@@ -29,7 +36,7 @@ export async function GET(request: NextRequest) {
     const uniqueVisitors = uniqueError ? 0 : new Set(uniqueData?.map((d) => d.session_id)).size;
 
     // Top pages
-    const { data: topPages, error: topError } = await supabase
+    const { data: topPages } = await supabase
       .from('page_views')
       .select('page_path')
       .gte('created_at', startDate.toISOString());
@@ -45,7 +52,7 @@ export async function GET(request: NextRequest) {
       .slice(0, 10);
 
     // Daily views
-    const { data: dailyData, error: dailyError } = await supabase
+    const { data: dailyData } = await supabase
       .from('page_views')
       .select('created_at')
       .gte('created_at', startDate.toISOString());
@@ -61,7 +68,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     // Device breakdown (simplified from user_agent)
-    const { data: deviceData, error: deviceError } = await supabase
+    const { data: deviceData } = await supabase
       .from('page_views')
       .select('user_agent')
       .gte('created_at', startDate.toISOString());
