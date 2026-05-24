@@ -24,8 +24,8 @@ interface HeroSettings {
   slides: HeroSlide[];
 }
 
-async function getHeroSettings(): Promise<HeroSettings> {
-  const defaults: HeroSettings = {
+function getDefaultSettings(): HeroSettings {
+  return {
     hero_image: null,
     hero_title: 'Fine Jewelry',
     hero_title_font: 'serif',
@@ -50,21 +50,25 @@ async function getHeroSettings(): Promise<HeroSettings> {
       },
     ],
   };
+}
 
+async function fetchHeroSettings(): Promise<HeroSettings> {
+  const defaults = getDefaultSettings();
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !anonKey) return defaults;
     const keys = ['hero_image', 'hero_title', 'hero_title_font', 'hero_title_size', 'hero_title_color', 'hero_cta_text', 'hero_cta_color', 'hero_cta_link', 'use_slider', 'hero_slides'];
     const filter = keys.map(k => `key.eq.${k}`).join(',');
     const res = await fetch(
       `${supabaseUrl}/rest/v1/site_settings?select=key,value&or=(${filter})`,
       {
         headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
-        cache: 'no-store',
       }
     );
     if (!res.ok) return defaults;
     const rows: { key: string; value: string }[] = await res.json();
+    if (!Array.isArray(rows)) return defaults;
     const map = rows.reduce((acc, r) => { acc[r.key] = r.value; return acc; }, {} as Record<string, string>);
     
     let slides = defaults.slides;
@@ -98,35 +102,35 @@ export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
-    getHeroSettings().then(setSettings);
+    fetchHeroSettings().then(setSettings);
   }, []);
 
-  if (!settings) return null;
-
   const fontFamily =
-    settings.hero_title_font === 'sans-serif' ? 'sans-serif' :
-    settings.hero_title_font === 'monospace' ? 'monospace' :
+    settings?.hero_title_font === 'sans-serif' ? 'sans-serif' :
+    settings?.hero_title_font === 'monospace' ? 'monospace' :
     'Georgia, serif';
 
   const titleStyle = {
     fontFamily,
-    fontSize: `clamp(32px, ${settings.hero_title_size}px, ${settings.hero_title_size}px)`,
-    color: settings.hero_title_color,
+    fontSize: `clamp(32px, ${settings?.hero_title_size}px, ${settings?.hero_title_size}px)`,
+    color: settings?.hero_title_color || '#ffffff',
   };
 
   const ctaStyle = {
-    backgroundColor: settings.hero_cta_color,
+    backgroundColor: settings?.hero_cta_color || '#013220',
     color: '#ffffff',
   };
 
-  // Auto-advance slides
+  // Auto-advance slides - must be before any conditional returns
   useEffect(() => {
-    if (!settings.use_slider || settings.slides.length <= 1) return;
+    if (!settings?.use_slider || !settings?.slides || settings.slides.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % settings.slides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [settings.use_slider, settings.slides.length]);
+  }, [settings?.use_slider, settings?.slides?.length]);
+
+  if (!settings) return null;
 
   if (settings.use_slider && settings.slides.length > 0) {
     const slide = settings.slides[currentSlide];
