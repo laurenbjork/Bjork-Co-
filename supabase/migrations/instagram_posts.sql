@@ -1,4 +1,5 @@
 -- Instagram Posts Table
+-- Migration for Instagram feed functionality
 CREATE TABLE IF NOT EXISTS instagram_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   image_url TEXT NOT NULL,
