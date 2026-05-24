@@ -6,23 +6,8 @@ import Footer from '@/app/sections/Footer';
 import Breadcrumb from '@/app/components/Breadcrumb';
 import ProductGrid from '@/app/components/ProductGrid';
 import { getCategoryBySlug, getProductsByCategory } from '@/app/lib/supabase-queries';
-import { convertSupabaseProduct } from '@/app/types/supabase';
 
-export async function generateStaticParams() {
-  const categories = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/categories?select=slug`,
-    {
-      headers: { 
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, 
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` 
-      },
-    }
-  ).then((res) => res.json());
-
-  return categories.map((cat: any) => ({
-    slug: cat.slug,
-  }));
-}
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -53,8 +38,7 @@ export default async function CategoryPage({ params }: Props) {
     notFound();
   }
 
-  const products = await getProductsByCategory(category.id);
-  const convertedProducts = products.map(convertSupabaseProduct);
+  const products = await getProductsByCategory(decodedSlug);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -79,10 +63,10 @@ export default async function CategoryPage({ params }: Props) {
               </p>
             )}
 
-            {convertedProducts.length === 0 ? (
+            {products.length === 0 ? (
               <p className="text-gray-400 text-[14px]">No products in this category yet.</p>
             ) : (
-              <ProductGrid products={convertedProducts} />
+              <ProductGrid products={products} />
             )}
           </div>
         </div>
